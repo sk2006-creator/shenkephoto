@@ -130,6 +130,9 @@
     .field textarea { resize: vertical; min-height: 80px; }
     .field .hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
     .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .image-input-wrap { display: flex; align-items: center; }
+    .image-input-wrap input { flex: 1; }
+    .image-input-wrap .btn { margin-left: 8px; flex-shrink: 0; white-space: nowrap; }
 
     /* List field (for photos, education, etc.) */
     .list-field { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 8px; }
@@ -396,6 +399,71 @@ async function ghDeleteFile(path, sha, message) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+}
+
+// Trigger Vercel rebuild via serverless function
+async function triggerRebuild() {
+  try {
+    const resp = await fetch('/api/rebuild', { method: 'POST' });
+    const data = await resp.json();
+    if (data.success) {
+      toast('\u7F51\u7AD9\u6B63\u5728\u91CD\u5EFA\u4E2D\uFF0C\u7EA61-2\u5206\u949F\u540E\u66F4\u65B0');
+    } else {
+      console.warn('Rebuild failed:', data.error);
+    }
+  } catch (e) {
+    console.warn('Rebuild request failed:', e);
+  }
+}
+
+// Upload image to GitHub repo
+const IMAGE_FIELDS = ['cover', 'image', 'thumbnail', 'src', 'portrait'];
+
+function isImageField(fieldName) {
+  return IMAGE_FIELDS.includes(fieldName);
+}
+
+async function uploadImage(file, onSuccess, onError) {
+  if (!file.type.startsWith('image/')) {
+    onError('\u8BF7\u9009\u62E9\u56FE\u7247\u6587\u4EF6');
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    onError('\u56FE\u7247\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC75MB');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const base64 = e.target.result.split(',')[1];
+    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
+    const filename = `${Date.now()}_${safeName}`;
+    const path = `public/images/${filename}`;
+
+    try {
+      const body = {
+        message: `Upload image: ${filename}`,
+        content: base64,
+        branch: REPO_BRANCH,
+      };
+      const resp = await ghApi(`/contents/${path}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const imageUrl = `/images/${filename}`;
+      onSuccess(imageUrl);
+    } catch (err) {
+      onError(err.message);
+    }
+  };
+  reader.onerror = () => onError('\u8BFB\u53D6\u6587\u4EF6\u5931\u8D25');
+  reader.readAsDataURL(file);
+}
+
+function createUploadButton(inputSelector, thumbSelector) {
+  // Deprecated: use handleImageUpload instead
+  return null;
 }
 
 // ============================================================
@@ -677,6 +745,51 @@ function bindPhotoThumbUpdates() {
   });
 }
 
+function handleImageUpload(btn, inputSelector, thumbSelector) {
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.onchange = function() {
+    if (!fileInput.files[0]) return;
+    btn.disabled = true;
+    btn.textContent = '\u4E0A\u4F20\u4E2D...';
+    uploadImage(fileInput.files[0], function(url) {
+      let input = null;
+      if (inputSelector) {
+        input = document.querySelector(inputSelector);
+      } else {
+        // Find sibling input in same container
+        const wrap = btn.closest('.image-input-wrap') || btn.parentElement;
+        input = wrap.querySelector('input[type="text"]');
+      }
+      if (input) {
+        input.value = url;
+        input.dispatchEvent(new Event('input'));
+      }
+      // Update thumbnail if exists
+      if (thumbSelector) {
+        const thumb = document.querySelector(thumbSelector);
+        if (thumb) { thumb.src = url; thumb.style.opacity = '1'; }
+      } else {
+        // Try to find thumbnail in same list item
+        const listItem = btn.closest('.list-field');
+        if (listItem) {
+          const thumb = listItem.querySelector('.photo-thumb');
+          if (thumb) { thumb.src = url; thumb.style.opacity = '1'; }
+        }
+      }
+      btn.disabled = false;
+      btn.textContent = '\u4E0A\u4F20';
+      toast('\u56FE\u7247\u4E0A\u4F20\u6210\u529F');
+    }, function(err) {
+      btn.disabled = false;
+      btn.textContent = '\u4E0A\u4F20';
+      toast('\u4E0A\u4F20\u5931\u8D25: ' + err, 'error');
+    });
+  };
+  fileInput.click();
+}
+
 function renderField(field, value) {
   const val = value !== undefined && value !== null ? value : (field.default || '');
   const req = field.required ? '<span class="req">*</span>' : '';
@@ -718,10 +831,17 @@ function renderField(field, value) {
     const isPhotoList = !!imageField;
 
     const itemHtml = items.map((item, idx) => {
-      const subFields = field.fields.map(sf =>
-        `<div class="field"><label>${sf.label}</label>
-        <input type="text" data-list-key="${field.name}" data-list-idx="${idx}" data-sub-key="${sf.name}" value="${escapeHtml(String(item[sf.name] || ''))}"></div>`
-      ).join('');
+      const subFields = field.fields.map(sf => {
+        if (isImageField(sf.name)) {
+          return `<div class="field"><label>${sf.label}</label>
+            <div class="image-input-wrap">
+              <input type="text" data-list-key="${field.name}" data-list-idx="${idx}" data-sub-key="${sf.name}" value="${escapeHtml(String(item[sf.name] || ''))}">
+              <button type="button" class="btn btn-outline btn-sm" onclick="handleImageUpload(this)">\u4E0A\u4F20</button>
+            </div></div>`;
+        }
+        return `<div class="field"><label>${sf.label}</label>
+        <input type="text" data-list-key="${field.name}" data-list-idx="${idx}" data-sub-key="${sf.name}" value="${escapeHtml(String(item[sf.name] || ''))}"></div>`;
+      }).join('');
 
       if (isPhotoList) {
         const imgSrc = item[imageField.name] || '';
@@ -754,6 +874,15 @@ function renderField(field, value) {
   }
 
   // Default: text input
+  if (isImageField(field.name)) {
+    return `<div class="field" data-field="${field.name}">
+      <label>${field.label} ${req}</label>
+      <div class="image-input-wrap">
+        <input type="text" data-key="${field.name}" value="${escapeHtml(String(val))}">
+        <button type="button" class="btn btn-outline btn-sm" onclick="handleImageUpload(this)">\u4E0A\u4F20</button>
+      </div>
+    </div>`;
+  }
   return `<div class="field" data-field="${field.name}">
     <label>${field.label} ${req}</label>
     <input type="text" data-key="${field.name}" value="${escapeHtml(String(val))}">
@@ -765,10 +894,17 @@ function addListItem(fieldName) {
   const field = col.fields.find(f => f.name === fieldName);
   const container = document.getElementById(`list-container-${fieldName}`);
   const idx = container.children.length;
-  const subFields = field.fields.map(sf =>
-    `<div class="field"><label>${sf.label}</label>
-    <input type="text" data-list-key="${fieldName}" data-list-idx="${idx}" data-sub-key="${sf.name}" value=""></div>`
-  ).join('');
+  const subFields = field.fields.map(sf => {
+    if (isImageField(sf.name)) {
+      return `<div class="field"><label>${sf.label}</label>
+        <div class="image-input-wrap">
+          <input type="text" data-list-key="${fieldName}" data-list-idx="${idx}" data-sub-key="${sf.name}" value="">
+          <button type="button" class="btn btn-outline btn-sm" onclick="handleImageUpload(this)">\u4E0A\u4F20</button>
+        </div></div>`;
+    }
+    return `<div class="field"><label>${sf.label}</label>
+    <input type="text" data-list-key="${fieldName}" data-list-idx="${idx}" data-sub-key="${sf.name}" value=""></div>`;
+  }).join('');
   const div = document.createElement('div');
   div.className = 'list-field';
   div.dataset.listItem = fieldName;
@@ -864,9 +1000,11 @@ async function saveItem(key, sha) {
     }
 
     const result = await ghSaveJson(path, data, sha || (currentFile?.sha), message);
-    toast('\u4FDD\u5B58\u6210\u529F\uFF01\u7F51\u7AD9\u5C06\u57281\u5206\u949F\u5185\u81EA\u52A8\u66F4\u65B0');
+    toast('\u4FDD\u5B58\u6210\u529F\uFF01\u6B63\u5728\u89E6\u53D1\u7F51\u7AD9\u91CD\u5EFA...');
+    // Trigger Vercel rebuild
+    triggerRebuild();
     // Go back to list
-    setTimeout(() => showCollection(key), 1000);
+    setTimeout(() => showCollection(key), 1500);
   } catch (err) {
     toast('\u4FDD\u5B58\u5931\u8D25: ' + err.message, 'error');
     if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '\u4FDD\u5B58'; }
@@ -879,7 +1017,8 @@ async function deleteItem(key, path) {
     const resp = await ghApi(`/contents/${path}`);
     const data = await resp.json();
     await ghDeleteFile(path, data.sha, `Delete ${path}`);
-    toast('\u5220\u9664\u6210\u529F');
+    toast('\u5220\u9664\u6210\u529F\uFF0C\u6B63\u5728\u89E6\u53D1\u7F51\u7AD9\u91CD\u5EFA...');
+    triggerRebuild();
     showCollection(key);
   } catch (err) {
     toast('\u5220\u9664\u5931\u8D25: ' + err.message, 'error');
