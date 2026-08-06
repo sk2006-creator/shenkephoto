@@ -1,6 +1,7 @@
-import { pressItems } from '@/data/artist';
+import { useContent } from '@/hooks/useContent';
 
 export default function PressPage() {
+  const { pressItems } = useContent();
   // Sort by date descending
   const sorted = [...pressItems].sort((a, b) =>
     new Date(b.date).getTime() - new Date(a.date).getTime()
