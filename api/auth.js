@@ -1,4 +1,4 @@
-module.exports = (req, res) => {
+export default function handler(req, res) {
   const host = req.headers.host;
   const redirect_uri = `https://${host}/api/auth/callback`;
 
@@ -9,4 +9,4 @@ module.exports = (req, res) => {
   });
 
   res.redirect(`https://github.com/login/oauth/authorize?${params.toString()}`);
-};
+}
