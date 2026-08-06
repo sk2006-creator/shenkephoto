@@ -401,18 +401,28 @@ async function ghDeleteFile(path, sha, message) {
   });
 }
 
-// Trigger Vercel rebuild via serverless function
+// CDN handles content updates automatically (jsDelivr caches ~5 min), no rebuild needed
 async function triggerRebuild() {
+  // No-op: website fetches content from jsDelivr CDN at runtime
+}
+
+// Update manifest.json when content is created or deleted
+async function updateManifest(collectionKey, contentId, action) {
+  // action: 'add' or 'remove'
+  const manifestPath = 'src/content/manifest.json';
   try {
-    const resp = await fetch('/api/rebuild', { method: 'POST' });
+    const resp = await ghApi(`/contents/${manifestPath}`);
     const data = await resp.json();
-    if (data.success) {
-      toast('\u7F51\u7AD9\u6B63\u5728\u91CD\u5EFA\u4E2D\uFF0C\u7EA61-2\u5206\u949F\u540E\u66F4\u65B0');
-    } else {
-      console.warn('Rebuild failed:', data.error);
+    const manifest = JSON.parse(base64ToUtf8(data.content));
+    if (!manifest[collectionKey]) manifest[collectionKey] = [];
+    if (action === 'add' && !manifest[collectionKey].includes(contentId)) {
+      manifest[collectionKey].push(contentId);
+    } else if (action === 'remove') {
+      manifest[collectionKey] = manifest[collectionKey].filter(id => id !== contentId);
     }
+    await ghSaveJson(manifestPath, manifest, data.sha, `Update manifest: ${action} ${contentId} in ${collectionKey}`);
   } catch (e) {
-    console.warn('Rebuild request failed:', e);
+    console.warn('Failed to update manifest:', e);
   }
 }
 
@@ -451,7 +461,7 @@ async function uploadImage(file, onSuccess, onError) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      const imageUrl = `/images/${filename}`;
+      const imageUrl = `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@${REPO_BRANCH}/public/images/${filename}`;
       onSuccess(imageUrl);
     } catch (err) {
       onError(err.message);
@@ -1000,9 +1010,12 @@ async function saveItem(key, sha) {
     }
 
     const result = await ghSaveJson(path, data, sha || (currentFile?.sha), message);
-    toast('\u4FDD\u5B58\u6210\u529F\uFF01\u6B63\u5728\u89E6\u53D1\u7F51\u7AD9\u91CD\u5EFA...');
-    // Trigger Vercel rebuild
-    triggerRebuild();
+    // If creating new multi-type content, add to manifest
+    if (col.type === 'multi' && !currentFile) {
+      const id = data.id || data.title || 'untitled';
+      await updateManifest(key, id, 'add');
+    }
+    toast('\u4FDD\u5B58\u6210\u529F\uFF01\u7F51\u7AD9\u5C06\u57285\u5206\u949F\u5185\u81EA\u52A8\u66F4\u65B0');
     // Go back to list
     setTimeout(() => showCollection(key), 1500);
   } catch (err) {
@@ -1017,8 +1030,13 @@ async function deleteItem(key, path) {
     const resp = await ghApi(`/contents/${path}`);
     const data = await resp.json();
     await ghDeleteFile(path, data.sha, `Delete ${path}`);
-    toast('\u5220\u9664\u6210\u529F\uFF0C\u6B63\u5728\u89E6\u53D1\u7F51\u7AD9\u91CD\u5EFA...');
-    triggerRebuild();
+    // Remove from manifest if multi-type content
+    const col = COLLECTIONS[key];
+    if (col && col.type === 'multi') {
+      const contentId = path.split('/').pop().replace('.json', '');
+      await updateManifest(key, contentId, 'remove');
+    }
+    toast('\u5220\u9664\u6210\u529F\uFF01\u7F51\u7AD9\u5C06\u57285\u5206\u949F\u5185\u81EA\u52A8\u66F4\u65B0');
     showCollection(key);
   } catch (err) {
     toast('\u5220\u9664\u5931\u8D25: ' + err.message, 'error');
