@@ -1,20 +1,821 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>内容管理 — 沈珂 SHEN KE</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <style>
-    body { margin: 0; background: #fafafa; }
-    .nc-loading-screen { display: none; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --border: #e5e5e5;
+      --text: #1a1a1a;
+      --text-muted: #888;
+      --accent: #1a1a1a;
+      --danger: #c0392b;
+      --success: #27ae60;
+      --radius: 4px;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ===== Login ===== */
+    .login-wrap {
+      max-width: 440px;
+      margin: 80px auto;
+      padding: 40px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .login-wrap h1 { font-size: 22px; font-weight: 400; margin-bottom: 8px; }
+    .login-wrap p { color: var(--text-muted); margin-bottom: 24px; font-size: 13px; }
+    .login-wrap input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-family: monospace;
+      margin-bottom: 12px;
+    }
+    .login-wrap input:focus { outline: none; border-color: var(--text); }
+    .login-wrap .hint { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.8; }
+    .login-wrap .hint a { color: var(--text); text-decoration: underline; }
+    .btn { display: inline-block; padding: 10px 24px; border: 1px solid var(--text); background: var(--text); color: #fff; border-radius: var(--radius); cursor: pointer; font-size: 14px; transition: opacity .2s; }
+    .btn:hover { opacity: 0.85; }
+    .btn-outline { background: transparent; color: var(--text); }
+    .btn-sm { padding: 6px 14px; font-size: 13px; }
+    .btn-danger { background: var(--danger); border-color: var(--danger); }
+    .error-msg { color: var(--danger); font-size: 13px; margin-top: 8px; display: none; }
+
+    /* ===== Layout ===== */
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 220px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      flex-shrink: 0;
+    }
+    .sidebar .logo { padding: 0 24px 24px; font-size: 16px; font-weight: 500; border-bottom: 1px solid var(--border); }
+    .sidebar .logo a { color: var(--text-muted); font-size: 12px; text-decoration: none; margin-left: 8px; }
+    .sidebar nav { padding: 16px 0; }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 24px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 14px;
+      transition: background .15s;
+    }
+    .sidebar nav a:hover { background: #f5f5f5; }
+    .sidebar nav a.active { background: #f0f0f0; font-weight: 500; }
+    .sidebar nav a .icon { width: 18px; text-align: center; font-size: 15px; }
+    .sidebar .logout { padding: 16px 24px; border-top: 1px solid var(--border); margin-top: auto; }
+    .sidebar .logout a { color: var(--danger); text-decoration: none; font-size: 13px; }
+
+    .main { flex: 1; padding: 40px 48px; overflow-x: hidden; }
+    .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+    .main-header h2 { font-size: 24px; font-weight: 400; }
+    .main-header .actions { display: flex; gap: 10px; }
+
+    /* ===== List ===== */
+    .item-list { display: flex; flex-direction: column; gap: 1px; }
+    .item-row {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      gap: 16px;
+      transition: background .15s;
+    }
+    .item-row:hover { background: #fcfcfc; }
+    .item-row .info { flex: 1; min-width: 0; }
+    .item-row .info .title { font-size: 15px; font-weight: 500; margin-bottom: 2px; }
+    .item-row .info .meta { font-size: 12px; color: var(--text-muted); }
+    .item-row .actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .item-row .thumb { width: 48px; height: 48px; border-radius: var(--radius); object-fit: cover; background: #eee; flex-shrink: 0; }
+
+    /* ===== Editor ===== */
+    .editor { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; max-width: 800px; }
+    .field { margin-bottom: 24px; }
+    .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+    .field label .req { color: var(--danger); }
+    .field input[type="text"],
+    .field input[type="number"],
+    .field input[type="url"],
+    .field input[type="email"],
+    .field textarea,
+    .field select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--text); }
+    .field textarea { resize: vertical; min-height: 80px; }
+    .field .hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* List field (for photos, education, etc.) */
+    .list-field { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 8px; }
+    .list-field .list-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 12px; color: var(--text-muted); }
+    .list-field .list-item-header button { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 12px; }
+    .list-add { width: 100%; padding: 10px; border: 1px dashed var(--border); border-radius: var(--radius); background: transparent; cursor: pointer; font-size: 13px; color: var(--text-muted); }
+    .list-add:hover { border-color: var(--text); color: var(--text); }
+
+    .editor-actions { display: flex; gap: 10px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .loading { text-align: center; padding: 60px; color: var(--text-muted); }
+    .loading .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--text); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      color: #fff;
+      font-size: 14px;
+      z-index: 9999;
+      animation: slideUp .3s ease;
+    }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .back-link { font-size: 13px; color: var(--text-muted); text-decoration: none; margin-bottom: 16px; display: inline-block; }
+    .back-link:hover { color: var(--text); }
+    .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty .empty-icon { font-size: 40px; margin-bottom: 12px; }
   </style>
 </head>
 <body>
-  <script src="https://unpkg.com/decap-cms@^3.6.4/dist/decap-cms.js"></script>
-  <script>
-    // Register Chinese locale preview
-    window.CMS_MANUAL_INIT = false;
-  </script>
+<div id="root"></div>
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const REPO_OWNER = 'sk2006-creator';
+const REPO_NAME = 'shenkephoto';
+const REPO_BRANCH = 'main';
+const API = 'https://api.github.com';
+
+// Content collections configuration
+const COLLECTIONS = {
+  works: {
+    label: '作品',
+    icon: '_camera',
+    dir: 'src/content/works',
+    type: 'multi', // multiple files in directory
+    titleField: 'title',
+    subtitleField: 'year',
+    fields: [
+      { name: 'id', label: 'ID（英文短横线）', type: 'text', required: true, pattern: '^[a-z0-9-]+$' },
+      { name: 'title', label: '系列标题（中文）', type: 'text', required: true },
+      { name: 'titleEn', label: '系列标题（英文）', type: 'text', required: true },
+      { name: 'year', label: '年份', type: 'text', required: true },
+      { name: 'description', label: '系列描述', type: 'textarea', required: true },
+      { name: 'cover', label: '封面图URL', type: 'text', required: true },
+      { name: 'photos', label: '照片列表', type: 'list', fields: [
+        { name: 'id', label: '照片ID', type: 'text' },
+        { name: 'src', label: '图片URL', type: 'text' },
+        { name: 'title', label: '标题', type: 'text' },
+        { name: 'caption', label: '说明', type: 'text' },
+        { name: 'width', label: '宽度', type: 'number' },
+        { name: 'height', label: '高度', type: 'number' },
+      ]},
+    ],
+  },
+  press: {
+    label: '印刷与传播',
+    icon: 'newspaper',
+    dir: 'src/content/press',
+    type: 'multi',
+    titleField: 'title',
+    subtitleField: 'media',
+    sortBy: 'date',
+    sortDesc: true,
+    fields: [
+      { name: 'id', label: 'ID', type: 'text', required: true },
+      { name: 'title', label: '文章标题', type: 'text', required: true },
+      { name: 'author', label: '作者', type: 'text', required: true },
+      { name: 'media', label: '媒体/出版物', type: 'text', required: true },
+      { name: 'date', label: '发布日期', type: 'date', required: true },
+      { name: 'excerpt', label: '摘要', type: 'textarea' },
+      { name: 'url', label: '原文链接', type: 'text' },
+    ],
+  },
+  shop: {
+    label: '商店',
+    icon: 'shopping_bag',
+    dir: 'src/content/shop',
+    type: 'multi',
+    titleField: 'title',
+    subtitleField: 'price',
+    fields: [
+      { name: 'id', label: 'ID', type: 'text', required: true },
+      { name: 'title', label: '商品名称', type: 'text', required: true },
+      { name: 'category', label: '分类', type: 'select', required: true, options: [
+        { value: 'book', label: '书籍' },
+        { value: 'print', label: '版画/作品' },
+        { value: 'merchandise', label: '衍生品' },
+      ]},
+      { name: 'price', label: '价格', type: 'text', required: true },
+      { name: 'currency', label: '货币符号', type: 'text', default: '¥' },
+      { name: 'image', label: '商品图片URL', type: 'text', required: true },
+      { name: 'description', label: '商品描述', type: 'textarea', required: true },
+      { name: 'edition', label: '限量信息', type: 'text' },
+    ],
+  },
+  films: {
+    label: '影片',
+    icon: 'film',
+    dir: 'src/content/films',
+    type: 'multi',
+    titleField: 'title',
+    subtitleField: 'year',
+    sortBy: 'year',
+    sortDesc: true,
+    fields: [
+      { name: 'id', label: 'ID', type: 'text', required: true },
+      { name: 'title', label: '影片标题', type: 'text', required: true },
+      { name: 'year', label: '年份', type: 'text', required: true },
+      { name: 'duration', label: '时长', type: 'text', required: true },
+      { name: 'description', label: '影片描述', type: 'textarea', required: true },
+      { name: 'thumbnail', label: '缩略图URL', type: 'text', required: true },
+      { name: 'videoUrl', label: '视频嵌入链接', type: 'text', required: true },
+    ],
+  },
+  artist: {
+    label: '艺术家介绍',
+    icon: 'person',
+    file: 'src/content/artist.json',
+    type: 'single',
+    fields: [
+      { name: 'name', label: '姓名（中文）', type: 'text', required: true },
+      { name: 'nameEn', label: '姓名（英文）', type: 'text', required: true },
+      { name: 'email', label: '电子邮箱', type: 'text', required: true },
+      { name: 'portrait', label: '肖像照URL', type: 'text', required: true },
+      { name: 'bio', label: '个人简介', type: 'textarea', required: true },
+      { name: 'education', label: '教育背景', type: 'list', fields: [
+        { name: 'year', label: '年份', type: 'text' },
+        { name: 'detail', label: '内容', type: 'text' },
+      ]},
+      { name: 'soloExhibitions', label: '个展', type: 'list', fields: [
+        { name: 'year', label: '年份', type: 'text' },
+        { name: 'title', label: '展览名称', type: 'text' },
+        { name: 'venue', label: '地点', type: 'text' },
+      ]},
+      { name: 'groupExhibitions', label: '联展', type: 'list', fields: [
+        { name: 'year', label: '年份', type: 'text' },
+        { name: 'title', label: '展览名称', type: 'text' },
+        { name: 'venue', label: '地点', type: 'text' },
+      ]},
+      { name: 'awards', label: '获奖', type: 'list', fields: [
+        { name: 'year', label: '年份', type: 'text' },
+        { name: 'title', label: '奖项名称', type: 'text' },
+      ]},
+    ],
+  },
+  contact: {
+    label: '联系方式',
+    icon: 'mail',
+    file: 'src/content/contact.json',
+    type: 'single',
+    fields: [
+      { name: 'email', label: '电子邮箱', type: 'text', required: true },
+      { name: 'studioLocation', label: '工作室地址', type: 'text', required: true },
+      { name: 'studioNote', label: '工作室备注', type: 'text' },
+      { name: 'galleries', label: '代理与合作画廊', type: 'list', fields: [
+        { name: 'name', label: '画廊名称', type: 'text' },
+        { name: 'role', label: '合作关系', type: 'text' },
+      ]},
+      { name: 'mediaInquiry', label: '媒体咨询说明', type: 'textarea' },
+    ],
+  },
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let token = localStorage.getItem('gh_token') || '';
+let currentView = null; // 'list' | 'edit' | 'single'
+let currentCollection = null;
+let currentFile = null; // for editing existing file
+let currentData = null;
+
+// ============================================================
+// GITHUB API
+// ============================================================
+async function ghApi(path, options = {}) {
+  const url = `${API}/repos/${REPO_OWNER}/${REPO_NAME}${path}`;
+  const headers = {
+    'Authorization': `token ${token}`,
+    'Accept': 'application/vnd.github.v3+json',
+    'User-Agent': 'shenkephoto-cms',
+    ...options.headers,
+  };
+  const resp = await fetch(url, { ...options, headers });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.message || `GitHub API error: ${resp.status}`);
+  }
+  return resp;
+}
+
+async function ghGetJson(path) {
+  const resp = await ghApi(`/contents/${path}`);
+  const data = await resp.json();
+  return {
+    content: JSON.parse(atob(data.content)),
+    sha: data.sha,
+  };
+}
+
+async function ghListDir(dir) {
+  const resp = await ghApi(`/contents/${dir}`);
+  return await resp.json();
+}
+
+async function ghSaveJson(path, content, sha, message) {
+  const body = {
+    message: message || `Update ${path}`,
+    content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))),
+    branch: REPO_BRANCH,
+  };
+  if (sha) body.sha = sha;
+  const resp = await ghApi(`/contents/${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return await resp.json();
+}
+
+async function ghDeleteFile(path, sha, message) {
+  const body = { message: message || `Delete ${path}`, sha, branch: REPO_BRANCH };
+  await ghApi(`/contents/${path}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render(html) {
+  document.getElementById('root').innerHTML = html;
+}
+
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function getIcon(name) {
+  const icons = {
+    camera: '\u{1F4F7}', newspaper: '\u{1F4F0}', shopping_bag: '\u{1F6CD}',
+    film: '\u{1F3AC}', person: '\u{1F464}', mail: '\u{2709}',
+  };
+  return icons[name] || '\u{1F4C1}';
+}
+
+// ===== Login Page =====
+function renderLogin() {
+  render(`
+    <div class="login-wrap">
+      <h1>\u5185\u5BB9\u7BA1\u7406\u540E\u53F0</h1>
+      <p>\u6C88\u73C2 SHEN KE \u2014 \u5F53\u4EE3\u6444\u5F71\u827A\u672F\u5BB6\u7F51\u7AD9</p>
+      <input type="password" id="token-input" placeholder="\u8F93\u5165 GitHub Token (ghp_...)" autocomplete="off">
+      <div class="hint">
+        \u9700\u8981 GitHub Personal Access Token\uFF08\u52FE\u9009 <code>repo</code> \u6743\u9650\uFF09\u3002<br>
+        \u524D\u5F80 <a href="https://github.com/settings/tokens" target="_blank">GitHub \u8BBE\u7F6E\u9875</a> \u521B\u5EFA\u65B0 Token\u3002
+      </div>
+      <div class="error-msg" id="login-error"></div>
+      <button class="btn" onclick="doLogin()" style="width:100%">\u767B\u5F55</button>
+    </div>
+  `);
+  document.getElementById('token-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+}
+
+async function doLogin() {
+  const input = document.getElementById('token-input');
+  const errEl = document.getElementById('login-error');
+  const t = input.value.trim();
+  if (!t) { errEl.textContent = '\u8BF7\u8F93\u5165 Token'; errEl.style.display = 'block'; return; }
+
+  token = t;
+  try {
+    const resp = await fetch(`${API}/user`, {
+      headers: { 'Authorization': `token ${token}`, 'User-Agent': 'shenkephoto-cms' }
+    });
+    if (!resp.ok) throw new Error('Token \u65E0\u6548');
+    const user = await resp.json();
+    // Verify repo access
+    const repoResp = await fetch(`${API}/repos/${REPO_OWNER}/${REPO_NAME}`, {
+      headers: { 'Authorization': `token ${token}`, 'User-Agent': 'shenkephoto-cms' }
+    });
+    if (!repoResp.ok) throw new Error('\u65E0\u6CD5\u8BBF\u95EE\u4ED3\u5E93\uFF0C\u8BF7\u786E\u8BA4 Token \u6709 repo \u6743\u9650');
+    localStorage.setItem('gh_token', token);
+    renderApp();
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+    token = '';
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('gh_token');
+  token = '';
+  renderLogin();
+}
+
+// ===== App Shell =====
+function renderApp() {
+  const navItems = Object.entries(COLLECTIONS).map(([key, col]) =>
+    `<a onclick="showCollection('${key}')" id="nav-${key}"><span class="icon">${getIcon(col.icon)}</span> ${col.label}</a>`
+  ).join('');
+
+  render(`
+    <div class="app">
+      <div class="sidebar">
+        <div class="logo">\u5185\u5BB9\u7BA1\u7406 <a href="/" target="_blank">\u2190 \u8FD4\u56DE\u7F51\u7AD9</a></div>
+        <nav>${navItems}</nav>
+        <div class="logout"><a href="#" onclick="doLogout();return false">\u9000\u51FA\u767B\u5F55</a></div>
+      </div>
+      <div class="main" id="main-content">
+        <div class="loading"><div class="spinner"></div><br>\u52A0\u8F7D\u4E2D...</div>
+      </div>
+    </div>
+  `);
+  // Default to first collection
+  showCollection('works');
+}
+
+// ===== Collection List =====
+async function showCollection(key) {
+  currentCollection = key;
+  currentFile = null;
+  // Update nav
+  document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+  const navEl = document.getElementById(`nav-${key}`);
+  if (navEl) navEl.classList.add('active');
+
+  const col = COLLECTIONS[key];
+  const main = document.getElementById('main-content');
+  main.innerHTML = `<div class="loading"><div class="spinner"></div><br>\u52A0\u8F7D\u4E2D...</div>`;
+
+  try {
+    if (col.type === 'single') {
+      // Single file collection - show edit button
+      const { content, sha } = await ghGetJson(col.file);
+      currentData = content;
+      currentFile = { path: col.file, sha };
+      renderSingleView(key, content);
+    } else {
+      // Multi file collection - list all files
+      const files = await ghListDir(col.dir);
+      const items = [];
+      for (const f of files) {
+        if (!f.name.endsWith('.json')) continue;
+        const { content } = await ghGetJson(`${col.dir}/${f.name}`);
+        items.push({ content, path: `${col.dir}/${f.name}`, sha: f.sha });
+      }
+      // Sort
+      if (col.sortBy) {
+        items.sort((a, b) => {
+          const av = a.content[col.sortBy] || '';
+          const bv = b.content[col.sortBy] || '';
+          return col.sortDesc ? bv.localeCompare(av) : av.localeCompare(bv);
+        });
+      }
+      renderListView(key, items);
+    }
+  } catch (err) {
+    main.innerHTML = `<div class="empty"><div class="empty-icon">\u26A0\uFE0F</div><p>${err.message}</p></div>`;
+  }
+}
+
+function renderListView(key, items) {
+  const col = COLLECTIONS[key];
+  const rows = items.map(item => {
+    const title = item.content[col.titleField] || item.content.id || '(untitled)';
+    const subtitle = col.subtitleField ? (item.content[col.subtitleField] || '') : '';
+    const thumb = item.content.cover || item.content.image || item.content.thumbnail || '';
+    return `
+      <div class="item-row">
+        ${thumb ? `<img class="thumb" src="${thumb}" onerror="this.style.display='none'">` : ''}
+        <div class="info">
+          <div class="title">${escapeHtml(title)}</div>
+          <div class="meta">${escapeHtml(subtitle)}</div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-outline btn-sm" onclick="editItem('${key}','${item.path}')">\u7F16\u8F91</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem('${key}','${item.path}')">\u5220\u9664</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="main-header">
+      <h2>${col.label}</h2>
+      <div class="actions">
+        <button class="btn btn-sm" onclick="newItem('${key}')">+ \u65B0\u5EFA</button>
+      </div>
+    </div>
+    ${items.length === 0 ? `<div class="empty"><div class="empty-icon">\u{1F4C4}</div><p>\u8FD8\u6CA1\u6709\u5185\u5BB9\uFF0C\u70B9\u51FB\u53F3\u4E0A\u89D2\u201C\u65B0\u5EFA\u201D\u521B\u5EFA</p></div>` : `<div class="item-list">${rows}</div>`}
+  `;
+}
+
+function renderSingleView(key, content) {
+  const col = COLLECTIONS[key];
+  document.getElementById('main-content').innerHTML = `
+    <div class="main-header">
+      <h2>${col.label}</h2>
+      <div class="actions">
+        <button class="btn btn-sm" onclick="editSingle('${key}')">\u7F16\u8F91\u5185\u5BB9</button>
+      </div>
+    </div>
+    <div class="editor">
+      ${renderReadonlyFields(col.fields, content)}
+    </div>
+  `;
+}
+
+function renderReadonlyFields(fields, data) {
+  return fields.map(f => {
+    let val = data[f.name];
+    if (val === undefined || val === null) return '';
+    if (f.type === 'list') {
+      if (!Array.isArray(val) || val.length === 0) return '';
+      const items = val.map(item => {
+        const parts = f.fields.map(sf => item[sf.name] || '');
+        return `<div style="padding:4px 0;border-bottom:1px solid #f0f0f0;">${escapeHtml(parts.join(' \u2014 '))}</div>`;
+      }).join('');
+      return `<div class="field"><label>${f.label}</label><div>${items}</div></div>`;
+    }
+    if (f.type === 'textarea') {
+      return `<div class="field"><label>${f.label}</label><div style="white-space:pre-wrap;color:#555;">${escapeHtml(String(val))}</div></div>`;
+    }
+    return `<div class="field"><label>${f.label}</label><div>${escapeHtml(String(val))}</div></div>`;
+  }).join('');
+}
+
+// ===== Editor =====
+function newItem(key) {
+  currentFile = null;
+  const col = COLLECTIONS[key];
+  const defaultData = {};
+  col.fields.forEach(f => {
+    if (f.default !== undefined) defaultData[f.name] = f.default;
+    else if (f.type === 'list') defaultData[f.name] = [];
+    else defaultData[f.name] = '';
+  });
+  renderEditor(key, defaultData, null);
+}
+
+async function editItem(key, path) {
+  const main = document.getElementById('main-content');
+  main.innerHTML = `<div class="loading"><div class="spinner"></div><br>\u52A0\u8F7D\u4E2D...</div>`;
+  try {
+    const { content, sha } = await ghGetJson(path);
+    currentFile = { path, sha };
+    renderEditor(key, content, sha);
+  } catch (err) {
+    main.innerHTML = `<div class="empty"><div class="empty-icon">\u26A0\uFE0F</div><p>${err.message}</p></div>`;
+  }
+}
+
+function editSingle(key) {
+  renderEditor(key, currentData, currentFile?.sha);
+}
+
+function renderEditor(key, data, sha) {
+  const col = COLLECTIONS[key];
+  const fieldsHtml = col.fields.map(f => renderField(f, data[f.name])).join('');
+
+  document.getElementById('main-content').innerHTML = `
+    <a class="back-link" href="#" onclick="showCollection('${key}');return false">\u2190 \u8FD4\u56DE${col.label}</a>
+    <div class="main-header">
+      <h2>${currentFile ? '\u7F16\u8F91' : '\u65B0\u5EFA'}${col.label}</h2>
+    </div>
+    <div class="editor" id="editor-form">
+      ${fieldsHtml}
+      <div class="editor-actions">
+        <button class="btn" onclick="saveItem('${key}', ${sha ? `'${sha}'` : 'null'})">\u4FDD\u5B58</button>
+        <button class="btn btn-outline" onclick="showCollection('${key}')">\u53D6\u6D88</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderField(field, value) {
+  const val = value !== undefined && value !== null ? value : (field.default || '');
+  const req = field.required ? '<span class="req">*</span>' : '';
+
+  if (field.type === 'textarea') {
+    return `<div class="field" data-field="${field.name}">
+      <label>${field.label} ${req}</label>
+      <textarea data-key="${field.name}">${escapeHtml(String(val))}</textarea>
+    </div>`;
+  }
+
+  if (field.type === 'select') {
+    const opts = field.options.map(o =>
+      `<option value="${o.value}" ${val === o.value ? 'selected' : ''}>${o.label}</option>`
+    ).join('');
+    return `<div class="field" data-field="${field.name}">
+      <label>${field.label} ${req}</label>
+      <select data-key="${field.name}">${opts}</select>
+    </div>`;
+  }
+
+  if (field.type === 'date') {
+    return `<div class="field" data-field="${field.name}">
+      <label>${field.label} ${req}</label>
+      <input type="date" data-key="${field.name}" value="${escapeHtml(String(val))}">
+    </div>`;
+  }
+
+  if (field.type === 'number') {
+    return `<div class="field" data-field="${field.name}">
+      <label>${field.label} ${req}</label>
+      <input type="number" data-key="${field.name}" value="${escapeHtml(String(val))}">
+    </div>`;
+  }
+
+  if (field.type === 'list') {
+    const items = Array.isArray(val) ? val : [];
+    const itemHtml = items.map((item, idx) => {
+      const subFields = field.fields.map(sf =>
+        `<div class="field"><label>${sf.label}</label>
+        <input type="text" data-list-key="${field.name}" data-list-idx="${idx}" data-sub-key="${sf.name}" value="${escapeHtml(String(item[sf.name] || ''))}"></div>`
+      ).join('');
+      return `<div class="list-field" data-list-item="${field.name}" data-list-idx="${idx}">
+        <div class="list-item-header">
+          <span>#${idx + 1}</span>
+          <button onclick="removeListItem('${field.name}', ${idx})">\u5220\u9664</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">${subFields}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="field" data-field="${field.name}">
+      <label>${field.label}</label>
+      <div id="list-container-${field.name}">${itemHtml}</div>
+      <button class="list-add" onclick="addListItem('${field.name}')">+ \u6DFB\u52A0\u4E00\u9879</button>
+    </div>`;
+  }
+
+  // Default: text input
+  return `<div class="field" data-field="${field.name}">
+    <label>${field.label} ${req}</label>
+    <input type="text" data-key="${field.name}" value="${escapeHtml(String(val))}">
+  </div>`;
+}
+
+function addListItem(fieldName) {
+  const col = COLLECTIONS[currentCollection];
+  const field = col.fields.find(f => f.name === fieldName);
+  const container = document.getElementById(`list-container-${fieldName}`);
+  const idx = container.children.length;
+  const subFields = field.fields.map(sf =>
+    `<div class="field"><label>${sf.label}</label>
+    <input type="text" data-list-key="${fieldName}" data-list-idx="${idx}" data-sub-key="${sf.name}" value=""></div>`
+  ).join('');
+  const div = document.createElement('div');
+  div.className = 'list-field';
+  div.dataset.listItem = fieldName;
+  div.dataset.listIdx = idx;
+  div.innerHTML = `<div class="list-item-header"><span>#${idx + 1}</span><button onclick="removeListItem('${fieldName}', ${idx})">\u5220\u9664</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">${subFields}</div>`;
+  container.appendChild(div);
+}
+
+function removeListItem(fieldName, idx) {
+  const container = document.getElementById(`list-container-${fieldName}`);
+  if (container.children[idx]) container.children[idx].remove();
+  // Reindex
+  Array.from(container.children).forEach((child, i) => {
+    child.dataset.listIdx = i;
+    child.querySelector('span').textContent = `#${i + 1}`;
+    child.querySelectorAll('input').forEach(input => input.dataset.listIdx = i);
+    const btn = child.querySelector('button');
+    if (btn) btn.setAttribute('onclick', `removeListItem('${fieldName}', ${i})`);
+  });
+}
+
+function collectFormData() {
+  const col = COLLECTIONS[currentCollection];
+  const data = {};
+
+  // Regular fields
+  col.fields.forEach(f => {
+    if (f.type === 'list') {
+      const container = document.getElementById(`list-container-${f.name}`);
+      if (!container) { data[f.name] = []; return; }
+      const items = [];
+      Array.from(container.children).forEach(child => {
+        const item = {};
+        f.fields.forEach(sf => {
+          const input = child.querySelector(`input[data-sub-key="${sf.name}"]`);
+          item[sf.name] = input ? input.value : '';
+        });
+        items.push(item);
+      });
+      data[f.name] = items;
+    } else {
+      const input = document.querySelector(`[data-key="${f.name}"]`);
+      if (input) {
+        data[f.name] = f.type === 'number' ? (parseInt(input.value) || 0) : input.value;
+      }
+    }
+  });
+
+  return data;
+}
+
+async function saveItem(key, sha) {
+  const col = COLLECTIONS[key];
+  const data = collectFormData();
+  const main = document.getElementById('main-content');
+
+  // Disable save button
+  const saveBtn = main.querySelector('.btn');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '\u4FDD\u5B58\u4E2D...'; }
+
+  try {
+    let path, message;
+    if (col.type === 'single') {
+      path = col.file;
+      message = `Update ${col.label}`;
+    } else {
+      const id = data.id || data.title || 'untitled';
+      path = `${col.dir}/${id}.json`;
+      message = `${currentFile ? 'Update' : 'Create'} ${col.label}: ${data[col.titleField] || id}`;
+    }
+
+    const result = await ghSaveJson(path, data, sha || (currentFile?.sha), message);
+    toast('\u4FDD\u5B58\u6210\u529F\uFF01\u7F51\u7AD9\u5C06\u57281\u5206\u949F\u5185\u81EA\u52A8\u66F4\u65B0');
+    // Go back to list
+    setTimeout(() => showCollection(key), 1000);
+  } catch (err) {
+    toast('\u4FDD\u5B58\u5931\u8D25: ' + err.message, 'error');
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '\u4FDD\u5B58'; }
+  }
+}
+
+async function deleteItem(key, path) {
+  if (!confirm('\u786E\u8BA4\u5220\u9664\u8FD9\u4E2A\u6587\u4EF6\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002')) return;
+  try {
+    const resp = await ghApi(`/contents/${path}`);
+    const data = await resp.json();
+    await ghDeleteFile(path, data.sha, `Delete ${path}`);
+    toast('\u5220\u9664\u6210\u529F');
+    showCollection(key);
+  } catch (err) {
+    toast('\u5220\u9664\u5931\u8D25: ' + err.message, 'error');
+  }
+}
+
+// ===== Utils =====
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+if (token) {
+  // Verify token is still valid
+  fetch(`${API}/user`, { headers: { 'Authorization': `token ${token}`, 'User-Agent': 'shenkephoto-cms' } })
+    .then(r => { if (r.ok) renderApp(); else { localStorage.removeItem('gh_token'); token = ''; renderLogin(); } })
+    .catch(() => renderLogin());
+} else {
+  renderLogin();
+}
+</script>
 </body>
 </html>
