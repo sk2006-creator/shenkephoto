@@ -137,6 +137,12 @@
     .list-field .list-item-header button { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 12px; }
     .list-add { width: 100%; padding: 10px; border: 1px dashed var(--border); border-radius: var(--radius); background: transparent; cursor: pointer; font-size: 13px; color: var(--text-muted); }
     .list-add:hover { border-color: var(--text); color: var(--text); }
+    .photo-list-item { display: flex; gap: 12px; align-items: flex-start; }
+    .photo-list-item .photo-thumb { width: 80px; height: 80px; border-radius: var(--radius); object-fit: cover; background: #f0f0f0; flex-shrink: 0; border: 1px solid var(--border); }
+    .photo-list-item .photo-fields { flex: 1; min-width: 0; }
+    .photo-list-item .photo-fields .field { margin-bottom: 8px; }
+    .photo-list-item .photo-fields .field label { font-size: 11px; }
+    .photo-list-item .photo-fields .field input { padding: 6px 8px; font-size: 13px; }
 
     .editor-actions { display: flex; gap: 10px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
     .loading { text-align: center; padding: 60px; color: var(--text-muted); }
@@ -177,7 +183,7 @@ const API = 'https://api.github.com';
 const COLLECTIONS = {
   works: {
     label: '作品',
-    icon: '_camera',
+    icon: 'camera',
     dir: 'src/content/works',
     type: 'multi', // multiple files in directory
     titleField: 'title',
@@ -336,11 +342,29 @@ async function ghApi(path, options = {}) {
   return resp;
 }
 
+// UTF-8 safe base64 encode/decode
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+function base64ToUtf8(b64) {
+  const binary = atob(b64.replace(/\n/g, ''));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
 async function ghGetJson(path) {
   const resp = await ghApi(`/contents/${path}`);
   const data = await resp.json();
   return {
-    content: JSON.parse(atob(data.content)),
+    content: JSON.parse(base64ToUtf8(data.content)),
     sha: data.sha,
   };
 }
@@ -353,7 +377,7 @@ async function ghListDir(dir) {
 async function ghSaveJson(path, content, sha, message) {
   const body = {
     message: message || `Update ${path}`,
-    content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))),
+    content: utf8ToBase64(JSON.stringify(content, null, 2)),
     branch: REPO_BRANCH,
   };
   if (sha) body.sha = sha;
@@ -522,16 +546,21 @@ function renderListView(key, items) {
     const title = item.content[col.titleField] || item.content.id || '(untitled)';
     const subtitle = col.subtitleField ? (item.content[col.subtitleField] || '') : '';
     const thumb = item.content.cover || item.content.image || item.content.thumbnail || '';
+    // Show photo count for works
+    let extraMeta = '';
+    if (key === 'works' && item.content.photos) {
+      extraMeta = ` · ${item.content.photos.length} 张照片`;
+    }
     return `
       <div class="item-row">
         ${thumb ? `<img class="thumb" src="${thumb}" onerror="this.style.display='none'">` : ''}
         <div class="info">
           <div class="title">${escapeHtml(title)}</div>
-          <div class="meta">${escapeHtml(subtitle)}</div>
+          <div class="meta">${escapeHtml(subtitle)}${extraMeta}</div>
         </div>
         <div class="actions">
-          <button class="btn btn-outline btn-sm" onclick="editItem('${key}','${item.path}')">\u7F16\u8F91</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteItem('${key}','${item.path}')">\u5220\u9664</button>
+          <button class="btn btn-outline btn-sm" onclick="editItem('${key}','${item.path}')">编辑</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteItem('${key}','${item.path}')">删除</button>
         </div>
       </div>
     `;
@@ -541,10 +570,11 @@ function renderListView(key, items) {
     <div class="main-header">
       <h2>${col.label}</h2>
       <div class="actions">
-        <button class="btn btn-sm" onclick="newItem('${key}')">+ \u65B0\u5EFA</button>
+        <button class="btn btn-sm" onclick="newItem('${key}')">+ 新建</button>
       </div>
     </div>
-    ${items.length === 0 ? `<div class="empty"><div class="empty-icon">\u{1F4C4}</div><p>\u8FD8\u6CA1\u6709\u5185\u5BB9\uFF0C\u70B9\u51FB\u53F3\u4E0A\u89D2\u201C\u65B0\u5EFA\u201D\u521B\u5EFA</p></div>` : `<div class="item-list">${rows}</div>`}
+    ${key === 'works' ? '<p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">每个系列是一个独立文件，包含系列信息和照片列表。点击「编辑」可管理系列内的照片。</p>' : ''}
+    ${items.length === 0 ? `<div class="empty"><div class="empty-icon">\u{1F4C4}</div><p>还没有内容，点击右上角"新建"创建</p></div>` : `<div class="item-list">${rows}</div>`}
   `;
 }
 
@@ -628,6 +658,23 @@ function renderEditor(key, data, sha) {
       </div>
     </div>
   `;
+  // Bind thumbnail auto-update for existing photo list items
+  bindPhotoThumbUpdates();
+}
+
+function bindPhotoThumbUpdates() {
+  document.querySelectorAll('img[data-photo-thumb]').forEach(thumb => {
+    const fieldName = thumb.dataset.photoThumb;
+    const idx = thumb.dataset.photoIdx;
+    const srcField = thumb.dataset.photoSrcField;
+    const input = document.querySelector(`input[data-list-key="${fieldName}"][data-list-idx="${idx}"][data-sub-key="${srcField}"]`);
+    if (input) {
+      input.addEventListener('input', function() {
+        thumb.src = this.value;
+        thumb.style.opacity = this.value ? '1' : '0.3';
+      });
+    }
+  });
 }
 
 function renderField(field, value) {
@@ -667,11 +714,29 @@ function renderField(field, value) {
 
   if (field.type === 'list') {
     const items = Array.isArray(val) ? val : [];
+    const imageField = field.fields.find(f => f.name === 'src' || f.name === 'image' || f.name === 'thumbnail');
+    const isPhotoList = !!imageField;
+
     const itemHtml = items.map((item, idx) => {
       const subFields = field.fields.map(sf =>
         `<div class="field"><label>${sf.label}</label>
         <input type="text" data-list-key="${field.name}" data-list-idx="${idx}" data-sub-key="${sf.name}" value="${escapeHtml(String(item[sf.name] || ''))}"></div>`
       ).join('');
+
+      if (isPhotoList) {
+        const imgSrc = item[imageField.name] || '';
+        return `<div class="list-field" data-list-item="${field.name}" data-list-idx="${idx}">
+          <div class="list-item-header">
+            <span>#${idx + 1}</span>
+            <button onclick="removeListItem('${field.name}', ${idx})">\u5220\u9664</button>
+          </div>
+          <div class="photo-list-item">
+            <img class="photo-thumb" src="${escapeHtml(imgSrc)}" onerror="this.style.opacity='0.3'" data-photo-thumb="${field.name}" data-photo-idx="${idx}" data-photo-src-field="${imageField.name}">
+            <div class="photo-fields">${subFields}</div>
+          </div>
+        </div>`;
+      }
+
       return `<div class="list-field" data-list-item="${field.name}" data-list-idx="${idx}">
         <div class="list-item-header">
           <span>#${idx + 1}</span>
@@ -708,8 +773,28 @@ function addListItem(fieldName) {
   div.className = 'list-field';
   div.dataset.listItem = fieldName;
   div.dataset.listIdx = idx;
-  div.innerHTML = `<div class="list-item-header"><span>#${idx + 1}</span><button onclick="removeListItem('${fieldName}', ${idx})">\u5220\u9664</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">${subFields}</div>`;
+
+  const imageField = field.fields.find(f => f.name === 'src' || f.name === 'image' || f.name === 'thumbnail');
+  if (imageField) {
+    div.innerHTML = `<div class="list-item-header"><span>#${idx + 1}</span><button onclick="removeListItem('${fieldName}', ${idx})">\u5220\u9664</button></div><div class="photo-list-item"><img class="photo-thumb" src="" style="opacity:0.3" data-photo-thumb="${fieldName}" data-photo-idx="${idx}" data-photo-src-field="${imageField.name}"><div class="photo-fields">${subFields}</div></div>`;
+  } else {
+    div.innerHTML = `<div class="list-item-header"><span>#${idx + 1}</span><button onclick="removeListItem('${fieldName}', ${idx})">\u5220\u9664</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">${subFields}</div>`;
+  }
   container.appendChild(div);
+
+  // Auto-update thumbnail when image URL field changes
+  if (imageField) {
+    const srcInput = div.querySelector(`input[data-sub-key="${imageField.name}"]`);
+    if (srcInput) {
+      srcInput.addEventListener('input', function() {
+        const thumb = div.querySelector('.photo-thumb');
+        if (thumb) {
+          thumb.src = this.value;
+          thumb.style.opacity = this.value ? '1' : '0.3';
+        }
+      });
+    }
+  }
 }
 
 function removeListItem(fieldName, idx) {
@@ -722,6 +807,9 @@ function removeListItem(fieldName, idx) {
     child.querySelectorAll('input').forEach(input => input.dataset.listIdx = i);
     const btn = child.querySelector('button');
     if (btn) btn.setAttribute('onclick', `removeListItem('${fieldName}', ${i})`);
+    // Update thumbnail data index
+    const thumb = child.querySelector('img[data-photo-thumb]');
+    if (thumb) thumb.dataset.photoIdx = i;
   });
 }
 
