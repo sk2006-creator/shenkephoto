@@ -1,7 +1,8 @@
-import { artist, contactInfo } from '@/data/artist';
+import { useContent } from '@/hooks/useContent';
 import { Mail, MapPin } from 'lucide-react';
 
 export default function ContactPage() {
+  const { artist, contactInfo } = useContent();
   return (
     <div className="page-enter pt-28 md:pt-32 min-h-screen flex items-center">
       <div className="px-6 md:px-10 lg:px-16 w-full">
