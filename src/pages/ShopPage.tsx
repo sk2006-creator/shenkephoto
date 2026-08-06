@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { shopItems } from '@/data/artist';
+import { useContent } from '@/hooks/useContent';
 import type { ShopItem } from '@/types';
 
 const categories = [
@@ -11,6 +11,7 @@ const categories = [
 
 export default function ShopPage() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const { shopItems } = useContent();
 
   const filtered = activeCategory === 'all'
     ? shopItems
