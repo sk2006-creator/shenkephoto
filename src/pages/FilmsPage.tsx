@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Play, X } from 'lucide-react';
-import { films } from '@/data/artist';
+import { useContent } from '@/hooks/useContent';
 import type { Film } from '@/types';
 
 export default function FilmsPage() {
   const [activeFilm, setActiveFilm] = useState<Film | null>(null);
+  const { films } = useContent();
 
   return (
     <div className="page-enter pt-28 md:pt-32">
