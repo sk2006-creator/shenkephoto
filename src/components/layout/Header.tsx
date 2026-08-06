@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { PageId } from '@/types';
-import { artist } from '@/data/artist';
+import { useContent } from '@/hooks/useContent';
 
 interface HeaderProps {
   currentPage: PageId;
@@ -19,6 +19,7 @@ const navItems: { id: PageId; label: string; labelEn: string }[] = [
 export default function Header({ currentPage, onNavigate }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { artist } = useContent();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
