@@ -1,0 +1,18 @@
+{
+  "id": "factory-portraits",
+  "title": "工厂肖像",
+  "titleEn": "Factory Portraits",
+  "year": "2022",
+  "description": "走访了长三角和珠三角地区十七座即将关闭或已停产的工厂，为流水线工人拍摄肖像。每张照片都在工人的工作岗位上完成，背景是他们日复一日面对的机器与流水线。这是对一种正在消失的劳动方式的记录，也是对劳动者尊严的凝视。",
+  "cover": "https://picsum.photos/seed/factory-portraits-cover/1600/1000?grayscale",
+  "photos": [
+    { "id": "fp-1", "src": "https://picsum.photos/seed/factory-portraits-1/1200/1500", "title": "装配线上的老张", "caption": "东莞 · 2022年5月", "width": 1200, "height": 1500 },
+    { "id": "fp-2", "src": "https://picsum.photos/seed/factory-portraits-2/1200/1500", "title": "纺织女工小王", "caption": "绍兴 · 2022年6月", "width": 1200, "height": 1500 },
+    { "id": "fp-3", "src": "https://picsum.photos/seed/factory-portraits-3/1200/1500", "title": "车间主任", "caption": "佛山 · 2022年7月", "width": 1200, "height": 1500 },
+    { "id": "fp-4", "src": "https://picsum.photos/seed/factory-portraits-4/1200/1500", "title": "最后一天上班", "caption": "东莞 · 2022年5月", "width": 1200, "height": 1500 },
+    { "id": "fp-5", "src": "https://picsum.photos/seed/factory-portraits-5/1200/1500", "title": "电焊工", "caption": "宁波 · 2022年8月", "width": 1200, "height": 1500 },
+    { "id": "fp-6", "src": "https://picsum.photos/seed/factory-portraits-6/1200/1500", "title": "空旷的车间", "caption": "绍兴 · 2022年6月", "width": 1200, "height": 1500 },
+    { "id": "fp-7", "src": "https://picsum.photos/seed/factory-portraits-7/1200/1500", "title": "食堂里的午餐", "caption": "佛山 · 2022年7月", "width": 1200, "height": 1500 },
+    { "id": "fp-8", "src": "https://picsum.photos/seed/factory-portraits-8/1200/1500", "title": "关闭的公告", "caption": "东莞 · 2022年5月", "width": 1200, "height": 1500 }
+  ]
+}

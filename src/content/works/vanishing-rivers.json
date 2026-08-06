@@ -1,0 +1,18 @@
+{
+  "id": "vanishing-rivers",
+  "title": "消逝的河流",
+  "titleEn": "Vanishing Rivers",
+  "year": "2023",
+  "description": "历时两年，沿长江中下游干流及支流拍摄。项目关注水利工程、工业排污与气候变化对河流生态系统的叠加影响，以及沿岸社区在河流消逝过程中的生存回应。这不是一组关于\"风景\"的照片，而是关于一条河流正在死去时，人们如何继续与它共处。",
+  "cover": "https://picsum.photos/seed/vanishing-rivers-cover/1600/1000",
+  "photos": [
+    { "id": "vr-1", "src": "https://picsum.photos/seed/vanishing-rivers-1/1200/1500", "title": "干涸的河床", "caption": "湖北 · 2022年10月", "width": 1200, "height": 1500 },
+    { "id": "vr-2", "src": "https://picsum.photos/seed/vanishing-rivers-2/1200/1500", "title": "排污口下游", "caption": "江苏 · 2023年5月", "width": 1200, "height": 1500 },
+    { "id": "vr-3", "src": "https://picsum.photos/seed/vanishing-rivers-3/1200/1500", "title": "渔民的最后一网", "caption": "安徽 · 2022年11月", "width": 1200, "height": 1500 },
+    { "id": "vr-4", "src": "https://picsum.photos/seed/vanishing-rivers-4/1200/1500", "title": "大坝之下", "caption": "湖北 · 2023年3月", "width": 1200, "height": 1500 },
+    { "id": "vr-5", "src": "https://picsum.photos/seed/vanishing-rivers-5/1200/1500", "title": "河岸的废墟", "caption": "江西 · 2023年6月", "width": 1200, "height": 1500 },
+    { "id": "vr-6", "src": "https://picsum.photos/seed/vanishing-rivers-6/1200/1500", "title": "采砂船", "caption": "湖南 · 2022年12月", "width": 1200, "height": 1500 },
+    { "id": "vr-7", "src": "https://picsum.photos/seed/vanishing-rivers-7/1200/1500", "title": "迁移的村庄", "caption": "安徽 · 2023年4月", "width": 1200, "height": 1500 },
+    { "id": "vr-8", "src": "https://picsum.photos/seed/vanishing-rivers-8/1200/1500", "title": "黄昏的江面", "caption": "江苏 · 2023年7月", "width": 1200, "height": 1500 }
+  ]
+}

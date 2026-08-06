@@ -1,0 +1,18 @@
+{
+  "id": "urban-islands",
+  "title": "城市孤岛",
+  "titleEn": "Urban Islands",
+  "year": "2024",
+  "description": "在人口超过两千万的超级城市中，个体的孤独感并非源于物理距离的遥远，而是来自亲密关系的断裂。这组作品拍摄于上海、深圳、重庆三座城市的过渡空间——地铁车厢、天桥、便利店、深夜的出租车后座——那些人们擦肩而过却从不交谈的瞬间。",
+  "cover": "https://picsum.photos/seed/urban-islands-cover/1600/1000",
+  "photos": [
+    { "id": "ui-1", "src": "https://picsum.photos/seed/urban-islands-1/1200/1500", "title": "地铁末班车", "caption": "上海 · 2024年1月", "width": 1200, "height": 1500 },
+    { "id": "ui-2", "src": "https://picsum.photos/seed/urban-islands-2/1200/1500", "title": "天桥上的影子", "caption": "深圳 · 2024年3月", "width": 1200, "height": 1500 },
+    { "id": "ui-3", "src": "https://picsum.photos/seed/urban-islands-3/1200/1500", "title": "便利店凌晨三点", "caption": "上海 · 2024年2月", "width": 1200, "height": 1500 },
+    { "id": "ui-4", "src": "https://picsum.photos/seed/urban-islands-4/1200/1500", "title": "出租车的后窗", "caption": "重庆 · 2024年4月", "width": 1200, "height": 1500 },
+    { "id": "ui-5", "src": "https://picsum.photos/seed/urban-islands-5/1200/1500", "title": "等候区", "caption": "上海 · 2024年1月", "width": 1200, "height": 1500 },
+    { "id": "ui-6", "src": "https://picsum.photos/seed/urban-islands-6/1200/1500", "title": "电梯间", "caption": "深圳 · 2024年3月", "width": 1200, "height": 1500 },
+    { "id": "ui-7", "src": "https://picsum.photos/seed/urban-islands-7/1200/1500", "title": "十字路口", "caption": "重庆 · 2024年4月", "width": 1200, "height": 1500 },
+    { "id": "ui-8", "src": "https://picsum.photos/seed/urban-islands-8/1200/1500", "title": "雨中的站台", "caption": "上海 · 2024年2月", "width": 1200, "height": 1500 }
+  ]
+}

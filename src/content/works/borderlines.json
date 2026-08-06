@@ -1,0 +1,16 @@
+{
+  "id": "borderlines",
+  "title": "边界线",
+  "titleEn": "Borderlines",
+  "year": "2021",
+  "description": "沿中国南方与东南亚的陆路边境线拍摄，总行程超过六千公里。项目探索\"边界\"作为一种物理与心理的双重存在——铁丝网两侧的人们如何理解彼此？当一条线将土地分为两个国家，生活在两侧的人与土地的关系是否也随之割裂？",
+  "cover": "https://picsum.photos/seed/borderlines-cover/1600/1000",
+  "photos": [
+    { "id": "bl-1", "src": "https://picsum.photos/seed/borderlines-1/1200/1500", "title": "铁丝网", "caption": "云南 · 2021年3月", "width": 1200, "height": 1500 },
+    { "id": "bl-2", "src": "https://picsum.photos/seed/borderlines-2/1200/1500", "title": "界碑旁的集市", "caption": "广西 · 2021年4月", "width": 1200, "height": 1500 },
+    { "id": "bl-3", "src": "https://picsum.photos/seed/borderlines-3/1200/1500", "title": "跨境上学路", "caption": "云南 · 2021年3月", "width": 1200, "height": 1500 },
+    { "id": "bl-4", "src": "https://picsum.photos/seed/borderlines-4/1200/1500", "title": "边防哨所", "caption": "云南 · 2021年5月", "width": 1200, "height": 1500 },
+    { "id": "bl-5", "src": "https://picsum.photos/seed/borderlines-5/1200/1500", "title": "河对岸的村庄", "caption": "广西 · 2021年4月", "width": 1200, "height": 1500 },
+    { "id": "bl-6", "src": "https://picsum.photos/seed/borderlines-6/1200/1500", "title": "走私小道", "caption": "云南 · 2021年5月", "width": 1200, "height": 1500 }
+  ]
+}

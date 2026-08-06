@@ -1,0 +1,16 @@
+{
+  "id": "nowhere",
+  "title": "无名之地",
+  "titleEn": "Nowhere",
+  "year": "2020",
+  "description": "历时三年，拍摄中国各地被废弃的工业与建筑空间——烂尾楼、关闭的矿区、空置的开发区。这些空间曾承载着对未来的承诺，如今却成为时间的废墟。作品以大画幅相机拍摄，在冷静的凝视中追问发展主义的代价。",
+  "cover": "https://picsum.photos/seed/nowhere-cover/1600/1000",
+  "photos": [
+    { "id": "nw-1", "src": "https://picsum.photos/seed/nowhere-1/1200/1500", "title": "烂尾楼", "caption": "鄂尔多斯 · 2019年9月", "width": 1200, "height": 1500 },
+    { "id": "nw-2", "src": "https://picsum.photos/seed/nowhere-2/1200/1500", "title": "废弃矿区", "caption": "辽宁 · 2020年3月", "width": 1200, "height": 1500 },
+    { "id": "nw-3", "src": "https://picsum.photos/seed/nowhere-3/1200/1500", "title": "空置开发区", "caption": "江苏 · 2019年11月", "width": 1200, "height": 1500 },
+    { "id": "nw-4", "src": "https://picsum.photos/seed/nowhere-4/1200/1500", "title": "未完工的体育馆", "caption": "贵州 · 2020年1月", "width": 1200, "height": 1500 },
+    { "id": "nw-5", "src": "https://picsum.photos/seed/nowhere-5/1200/1500", "title": "荒草中的雕塑", "caption": "辽宁 · 2020年3月", "width": 1200, "height": 1500 },
+    { "id": "nw-6", "src": "https://picsum.photos/seed/nowhere-6/1200/1500", "title": "楼梯通向虚无", "caption": "鄂尔多斯 · 2019年9月", "width": 1200, "height": 1500 }
+  ]
+}

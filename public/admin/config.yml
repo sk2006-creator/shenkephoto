@@ -1,0 +1,198 @@
+backend:
+  name: github
+  repo: sk2006-creator/shenkephoto
+  branch: main
+  base_url: https://shenkephoto.vercel.app
+  auth_endpoint: /api/auth
+
+media_folder: "public/images/uploads"
+public_folder: "/images/uploads"
+
+site_url: https://shenkephoto.vercel.app
+
+collections:
+  # ==========================================
+  # 1. 作品 — 摄影系列
+  # ==========================================
+  - name: "works"
+    label: "作品"
+    label_singular: "系列"
+    folder: "src/content/works"
+    create: true
+    delete: true
+    extension: "json"
+    format: "json"
+    slug: "{{slug}}"
+    summary: "{{title}} — {{year}}"
+    sortable_fields: ['year', 'title']
+    fields:
+      - { name: "id", label: "ID（英文短横线格式）", widget: "string", pattern: ['^[a-z0-9-]+$', "只允许小写字母、数字和短横线"] }
+      - { name: "title", label: "系列标题（中文）", widget: "string" }
+      - { name: "titleEn", label: "系列标题（英文）", widget: "string" }
+      - { name: "year", label: "年份", widget: "string" }
+      - { name: "description", label: "系列描述", widget: "text" }
+      - { name: "cover", label: "封面图", widget: "image" }
+      - name: "photos"
+        label: "照片"
+        widget: "list"
+        summary: "{{fields.title}}"
+        fields:
+          - { name: "id", label: "照片ID", widget: "string" }
+          - { name: "src", label: "图片", widget: "image" }
+          - { name: "title", label: "标题", widget: "string" }
+          - { name: "caption", label: "说明", widget: "string", required: false }
+          - { name: "width", label: "宽度（像素）", widget: "number", default: 1200 }
+          - { name: "height", label: "高度（像素）", widget: "number", default: 1500 }
+
+  # ==========================================
+  # 2. 印刷与传播 — 评论文章
+  # ==========================================
+  - name: "press"
+    label: "印刷与传播"
+    label_singular: "评论文章"
+    folder: "src/content/press"
+    create: true
+    delete: true
+    extension: "json"
+    format: "json"
+    slug: "{{slug}}"
+    summary: "{{title}} — {{author}}"
+    sortable_fields: ['date', 'title', 'media']
+    view_filters:
+      - label: "2024年"
+        field: date
+        pattern: "^2024"
+      - label: "2023年"
+        field: date
+        pattern: "^2023"
+    fields:
+      - { name: "id", label: "ID", widget: "string" }
+      - { name: "title", label: "文章标题", widget: "string" }
+      - { name: "author", label: "作者", widget: "string" }
+      - { name: "media", label: "媒体/出版物", widget: "string" }
+      - { name: "date", label: "发布日期", widget: "datetime", date_format: "YYYY-MM-DD", time_format: false, format: "YYYY-MM-DD" }
+      - { name: "excerpt", label: "摘要", widget: "text", required: false }
+      - { name: "url", label: "原文链接", widget: "string", required: false }
+
+  # ==========================================
+  # 3. 商店 — 商品
+  # ==========================================
+  - name: "shop"
+    label: "商店"
+    label_singular: "商品"
+    folder: "src/content/shop"
+    create: true
+    delete: true
+    extension: "json"
+    format: "json"
+    slug: "{{slug}}"
+    summary: "{{title}} — {{currency}}{{price}}"
+    sortable_fields: ['title', 'category', 'price']
+    fields:
+      - { name: "id", label: "ID", widget: "string" }
+      - { name: "title", label: "商品名称", widget: "string" }
+      - name: "category"
+        label: "分类"
+        widget: "select"
+        options:
+          - { label: "书籍", value: "book" }
+          - { label: "版画/作品", value: "print" }
+          - { label: "衍生品", value: "merchandise" }
+      - { name: "price", label: "价格", widget: "string" }
+      - { name: "currency", label: "货币符号", widget: "string", default: "¥" }
+      - { name: "image", label: "商品图片", widget: "image" }
+      - { name: "description", label: "商品描述", widget: "text" }
+      - { name: "edition", label: "限量信息", widget: "string", required: false }
+
+  # ==========================================
+  # 4. 影片
+  # ==========================================
+  - name: "films"
+    label: "影片"
+    label_singular: "影片"
+    folder: "src/content/films"
+    create: true
+    delete: true
+    extension: "json"
+    format: "json"
+    slug: "{{slug}}"
+    summary: "{{title}} — {{year}}"
+    sortable_fields: ['year', 'title']
+    fields:
+      - { name: "id", label: "ID", widget: "string" }
+      - { name: "title", label: "影片标题", widget: "string" }
+      - { name: "year", label: "年份", widget: "string" }
+      - { name: "duration", label: "时长", widget: "string" }
+      - { name: "description", label: "影片描述", widget: "text" }
+      - { name: "thumbnail", label: "缩略图", widget: "image" }
+      - { name: "videoUrl", label: "视频嵌入链接", widget: "string" }
+
+  # ==========================================
+  # 5. 艺术家介绍
+  # ==========================================
+  - name: "artist"
+    label: "艺术家介绍"
+    delete: false
+    files:
+      - name: "info"
+        label: "艺术家信息"
+        file: "src/content/artist.json"
+        fields:
+          - { name: "name", label: "姓名（中文）", widget: "string" }
+          - { name: "nameEn", label: "姓名（英文）", widget: "string" }
+          - { name: "email", label: "电子邮箱", widget: "string" }
+          - { name: "portrait", label: "肖像照", widget: "image" }
+          - { name: "bio", label: "个人简介", widget: "text" }
+          - name: "education"
+            label: "教育背景"
+            widget: "list"
+            summary: "{{fields.year}} — {{fields.detail}}"
+            fields:
+              - { name: "year", label: "年份", widget: "string" }
+              - { name: "detail", label: "内容", widget: "string" }
+          - name: "soloExhibitions"
+            label: "个展"
+            widget: "list"
+            summary: "{{fields.year}} — {{fields.title}}"
+            fields:
+              - { name: "year", label: "年份", widget: "string" }
+              - { name: "title", label: "展览名称", widget: "string" }
+              - { name: "venue", label: "地点", widget: "string" }
+          - name: "groupExhibitions"
+            label: "联展"
+            widget: "list"
+            summary: "{{fields.year}} — {{fields.title}}"
+            fields:
+              - { name: "year", label: "年份", widget: "string" }
+              - { name: "title", label: "展览名称", widget: "string" }
+              - { name: "venue", label: "地点", widget: "string" }
+          - name: "awards"
+            label: "获奖"
+            widget: "list"
+            summary: "{{fields.year}} — {{fields.title}}"
+            fields:
+              - { name: "year", label: "年份", widget: "string" }
+              - { name: "title", label: "奖项名称", widget: "string" }
+
+  # ==========================================
+  # 6. 联系方式
+  # ==========================================
+  - name: "contact"
+    label: "联系方式"
+    delete: false
+    files:
+      - name: "info"
+        label: "联系信息"
+        file: "src/content/contact.json"
+        fields:
+          - { name: "email", label: "电子邮箱", widget: "string" }
+          - { name: "studioLocation", label: "工作室地址", widget: "string" }
+          - { name: "studioNote", label: "工作室备注", widget: "string" }
+          - name: "galleries"
+            label: "代理与合作画廊"
+            widget: "list"
+            summary: "{{fields.name}} — {{fields.role}}"
+            fields:
+              - { name: "name", label: "画廊名称", widget: "string" }
+              - { name: "role", label: "合作关系", widget: "string" }
+          - { name: "mediaInquiry", label: "媒体咨询说明", widget: "text" }
