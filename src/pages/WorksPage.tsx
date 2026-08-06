@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { series } from '@/data/artist';
+import { useContent } from '@/hooks/useContent';
 import type { Series } from '@/types';
 
 interface WorksPageProps {
@@ -8,6 +8,7 @@ interface WorksPageProps {
 
 export default function WorksPage({ onSeriesClick }: WorksPageProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const { series } = useContent();
 
   return (
     <div className="page-enter pt-28 md:pt-32">
