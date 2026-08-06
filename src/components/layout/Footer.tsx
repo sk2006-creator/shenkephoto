@@ -1,11 +1,12 @@
 import type { PageId } from '@/types';
-import { artist } from '@/data/artist';
+import { useContent } from '@/hooks/useContent';
 
 interface FooterProps {
   onNavigate: (page: PageId) => void;
 }
 
 export default function Footer({ onNavigate }: FooterProps) {
+  const { artist } = useContent();
   return (
     <footer className="border-t border-border mt-32">
       <div className="mx-auto px-6 md:px-10 lg:px-16 py-12 md:py-16">
