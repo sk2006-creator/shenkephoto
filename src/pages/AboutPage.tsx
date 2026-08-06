@@ -1,6 +1,7 @@
-import { artist } from '@/data/artist';
+import { useContent } from '@/hooks/useContent';
 
 export default function AboutPage() {
+  const { artist } = useContent();
   return (
     <div className="page-enter pt-28 md:pt-32">
       <div className="px-6 md:px-10 lg:px-16">
