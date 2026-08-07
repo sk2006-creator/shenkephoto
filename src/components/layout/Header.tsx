@@ -8,10 +8,11 @@ interface HeaderProps {
 }
 
 const navItems: { id: PageId; label: string; labelEn: string }[] = [
-  { id: 'works', label: '作品', labelEn: 'Works' },
-  { id: 'press', label: '印刷与传播', labelEn: 'Press' },
+  { id: 'works', label: '摄影', labelEn: 'Photography' },
+  { id: 'films', label: '电影', labelEn: 'Films' },
+  { id: 'press', label: '媒体', labelEn: 'Press' },
+  { id: 'writing', label: '写作', labelEn: 'Writing' },
   { id: 'shop', label: '商店', labelEn: 'Shop' },
-  { id: 'films', label: '影片', labelEn: 'Films' },
   { id: 'about', label: '艺术家介绍', labelEn: 'About' },
   { id: 'contact', label: '联系方式', labelEn: 'Contact' },
 ];
@@ -44,7 +45,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
         <div className="mx-auto flex items-center justify-between px-6 md:px-10 lg:px-16 h-16 md:h-20">
           {/* Logo / Artist Name */}
           <button
-            onClick={() => handleNav('works')}
+            onClick={() => handleNav('home')}
             className="text-left group"
           >
             <div className="font-serif-display text-xl md:text-2xl font-medium tracking-wide leading-none text-foreground">
@@ -56,7 +57,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
           </button>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8 lg:gap-10">
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -84,7 +85,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
       {/* Mobile Menu */}
       {menuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-white md:hidden flex flex-col items-center justify-center gap-8"
+          className="fixed inset-0 z-40 bg-white md:hidden flex flex-col items-center justify-center gap-6"
           style={{ animation: 'fadeIn 0.3s ease-out' }}
         >
           {navItems.map((item, i) => (
