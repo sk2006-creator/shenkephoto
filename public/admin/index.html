@@ -169,6 +169,55 @@
     .back-link:hover { color: var(--text); }
     .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
     .empty .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+    /* Rich text editor toolbar */
+    .rte-toolbar {
+      display: flex;
+      gap: 2px;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: var(--radius) var(--radius) 0 0;
+      background: #f9f9f9;
+      flex-wrap: wrap;
+    }
+    .rte-toolbar button {
+      width: 30px;
+      height: 28px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+      color: #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .rte-toolbar button:hover { background: #eee; border-color: #ddd; }
+    .rte-toolbar button.active { background: #ddd; border-color: #ccc; }
+    .rte-toolbar .sep { width: 1px; background: #ddd; margin: 3px 4px; }
+    .rte-editor {
+      min-height: 300px;
+      max-height: 600px;
+      overflow-y: auto;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 0 0 var(--radius) var(--radius);
+      font-size: 15px;
+      line-height: 1.8;
+      font-family: inherit;
+      background: #fff;
+      outline: none;
+    }
+    .rte-editor:focus { border-color: var(--text); }
+
+    /* Attachments list */
+    .attach-item { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+    .attach-item input { flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; }
+    .attach-item input:focus { outline: none; border-color: var(--text); }
+    .attach-item .btn { flex-shrink: 0; }
+    .attach-item .attach-num { color: var(--text-muted); font-size: 12px; min-width: 24px; }
   </style>
 </head>
 <body>
@@ -221,7 +270,9 @@ const COLLECTIONS = {
       { name: 'author', label: '作者', type: 'text', required: true },
       { name: 'media', label: '媒体/出版物', type: 'text', required: true },
       { name: 'date', label: '发布日期', type: 'date', required: true },
-      { name: 'excerpt', label: '摘要', type: 'textarea' },
+      { name: 'excerpt', label: '摘要（建议200字内）', type: 'textarea' },
+      { name: 'body', label: '文章正文', type: 'richtext' },
+      { name: 'attachments', label: '附件（Word/PDF等）', type: 'attachments' },
       { name: 'url', label: '原文链接', type: 'text' },
     ],
   },
@@ -240,7 +291,9 @@ const COLLECTIONS = {
       { name: 'author', label: '作者', type: 'text', required: true },
       { name: 'media', label: '媒体/出版物', type: 'text', required: true },
       { name: 'date', label: '发布日期', type: 'date', required: true },
-      { name: 'excerpt', label: '摘要', type: 'textarea' },
+      { name: 'excerpt', label: '摘要（建议200字内）', type: 'textarea' },
+      { name: 'body', label: '文章正文', type: 'richtext' },
+      { name: 'attachments', label: '附件（Word/PDF等）', type: 'attachments' },
       { name: 'url', label: '原文链接', type: 'text' },
     ],
   },
@@ -443,49 +496,11 @@ async function updateManifest(collectionKey, contentId, action) {
   }
 }
 
-// Upload image to GitHub repo
+// Upload file to GitHub repo (images → public/images/, other → public/files/)
 const IMAGE_FIELDS = ['cover', 'image', 'thumbnail', 'src', 'portrait'];
 
 function isImageField(fieldName) {
   return IMAGE_FIELDS.includes(fieldName);
-}
-
-async function uploadImage(file, onSuccess, onError) {
-  if (!file.type.startsWith('image/')) {
-    onError('\u8BF7\u9009\u62E9\u56FE\u7247\u6587\u4EF6');
-    return;
-  }
-  if (file.size > 5 * 1024 * 1024) {
-    onError('\u56FE\u7247\u5927\u5C0F\u4E0D\u80FD\u8D85\u8FC75MB');
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    const base64 = e.target.result.split(',')[1];
-    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
-    const filename = `${Date.now()}_${safeName}`;
-    const path = `public/images/${filename}`;
-
-    try {
-      const body = {
-        message: `Upload image: ${filename}`,
-        content: base64,
-        branch: REPO_BRANCH,
-      };
-      const resp = await ghApi(`/contents/${path}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const imageUrl = `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@${REPO_BRANCH}/public/images/${filename}`;
-      onSuccess(imageUrl);
-    } catch (err) {
-      onError(err.message);
-    }
-  };
-  reader.onerror = () => onError('\u8BFB\u53D6\u6587\u4EF6\u5931\u8D25');
-  reader.readAsDataURL(file);
 }
 
 function createUploadButton(inputSelector, thumbSelector) {
@@ -700,8 +715,13 @@ function renderReadonlyFields(fields, data) {
       }).join('');
       return `<div class="field"><label>${f.label}</label><div>${items}</div></div>`;
     }
-    if (f.type === 'textarea') {
-      return `<div class="field"><label>${f.label}</label><div style="white-space:pre-wrap;color:#555;">${escapeHtml(String(val))}</div></div>`;
+    if (f.type === 'textarea' || f.type === 'richtext') {
+      return `<div class="field"><label>${f.label}</label><div style="white-space:pre-wrap;color:#555;">${val || '(空)'}</div></div>`;
+    }
+    if (f.type === 'attachments') {
+      if (!Array.isArray(val) || val.length === 0) return '';
+      const items = val.map(att => `<div style="padding:4px 0;border-bottom:1px solid #f0f0f0;">${escapeHtml(att.fileName || '(未命名)')}</div>`).join('');
+      return `<div class="field"><label>${f.label}</label><div>${items}</div></div>`;
     }
     return `<div class="field"><label>${f.label}</label><div>${escapeHtml(String(val))}</div></div>`;
   }).join('');
@@ -755,6 +775,8 @@ function renderEditor(key, data, sha) {
   `;
   // Bind thumbnail auto-update for existing photo list items
   bindPhotoThumbUpdates();
+  // Bind RTE toolbar events
+  bindRTEToolbars();
 }
 
 function bindPhotoThumbUpdates() {
@@ -773,19 +795,27 @@ function bindPhotoThumbUpdates() {
 }
 
 function handleImageUpload(btn, inputSelector, thumbSelector) {
+  const isAttach = inputSelector && inputSelector.includes('attach');
   const fileInput = document.createElement('input');
   fileInput.type = 'file';
-  fileInput.accept = 'image/*';
+  fileInput.accept = isAttach ? '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt,.rtf,image/*' : 'image/*';
   fileInput.onchange = function() {
     if (!fileInput.files[0]) return;
+    const file = fileInput.files[0];
+    const maxSize = isAttach ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      const maxMB = isAttach ? '10MB' : '5MB';
+      toast('文件大小不能超过' + maxMB, 'error');
+      return;
+    }
+
     btn.disabled = true;
-    btn.textContent = '\u4E0A\u4F20\u4E2D...';
-    uploadImage(fileInput.files[0], function(url) {
+    btn.textContent = '上传中...';
+    uploadAnyFile(file, isAttach, function(url) {
       let input = null;
       if (inputSelector) {
         input = document.querySelector(inputSelector);
       } else {
-        // Find sibling input in same container
         const wrap = btn.closest('.image-input-wrap') || btn.parentElement;
         input = wrap.querySelector('input[type="text"]');
       }
@@ -793,12 +823,10 @@ function handleImageUpload(btn, inputSelector, thumbSelector) {
         input.value = url;
         input.dispatchEvent(new Event('input'));
       }
-      // Update thumbnail if exists
       if (thumbSelector) {
         const thumb = document.querySelector(thumbSelector);
         if (thumb) { thumb.src = url; thumb.style.opacity = '1'; }
       } else {
-        // Try to find thumbnail in same list item
         const listItem = btn.closest('.list-field');
         if (listItem) {
           const thumb = listItem.querySelector('.photo-thumb');
@@ -806,15 +834,45 @@ function handleImageUpload(btn, inputSelector, thumbSelector) {
         }
       }
       btn.disabled = false;
-      btn.textContent = '\u4E0A\u4F20';
-      toast('\u56FE\u7247\u4E0A\u4F20\u6210\u529F');
+      btn.textContent = '上传';
+      toast('上传成功');
     }, function(err) {
       btn.disabled = false;
-      btn.textContent = '\u4E0A\u4F20';
-      toast('\u4E0A\u4F20\u5931\u8D25: ' + err, 'error');
+      btn.textContent = '上传';
+      toast('上传失败: ' + err, 'error');
     });
   };
   fileInput.click();
+}
+
+function uploadAnyFile(file, isAttach, onSuccess, onError) {
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const base64 = e.target.result.split(',')[1];
+    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_').toLowerCase();
+    const filename = `${Date.now()}_${safeName}`;
+    const dir = isAttach ? 'public/files' : 'public/images';
+    const path = `${dir}/${filename}`;
+
+    try {
+      const body = {
+        message: `Upload file: ${filename}`,
+        content: base64,
+        branch: REPO_BRANCH,
+      };
+      const resp = await ghApi(`/contents/${path}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const fileUrl = `https://cdn.jsdelivr.net/gh/${REPO_OWNER}/${REPO_NAME}@${REPO_BRANCH}/${dir}/${filename}`;
+      onSuccess(fileUrl);
+    } catch (err) {
+      onError(err.message);
+    }
+  };
+  reader.onerror = () => onError('文件读取失败');
+  reader.readAsDataURL(file);
 }
 
 function renderField(field, value) {
@@ -825,6 +883,50 @@ function renderField(field, value) {
     return `<div class="field" data-field="${field.name}">
       <label>${field.label} ${req}</label>
       <textarea data-key="${field.name}">${escapeHtml(String(val))}</textarea>
+    </div>`;
+  }
+
+  if (field.type === 'richtext') {
+    const safeVal = String(val || '');
+    return `<div class="field" data-field="${field.name}">
+      <label>${field.label} ${req}</label>
+      <div class="rte-toolbar" data-rte-toolbar="${field.name}">
+        <button type="button" data-cmd="bold" title="加粗">B</button>
+        <button type="button" data-cmd="italic" title="斜体">I</button>
+        <span class="sep"></span>
+        <button type="button" data-cmd="formatBlock" data-arg="h2" title="大标题">H2</button>
+        <button type="button" data-cmd="formatBlock" data-arg="h3" title="小标题">H3</button>
+        <span class="sep"></span>
+        <button type="button" data-cmd="insertUnorderedList" title="无序列表">•</button>
+        <button type="button" data-cmd="insertOrderedList" title="有序列表">1.</button>
+        <span class="sep"></span>
+        <button type="button" data-cmd="createLink" title="插入链接">🔗</button>
+        <button type="button" data-cmd="insertImage" title="插入图片">🖼</button>
+        <button type="button" data-cmd="formatBlock" data-arg="blockquote" title="引用">❝</button>
+        <span class="sep"></span>
+        <button type="button" data-cmd="insertHorizontalRule" title="分隔线">—</button>
+        <button type="button" data-cmd="removeFormat" title="清除格式">Tx</button>
+      </div>
+      <div class="rte-editor" contenteditable="true" data-key="${field.name}">${safeVal}</div>
+    </div>`;
+  }
+
+  if (field.type === 'attachments') {
+    const items = Array.isArray(val) ? val : [];
+    const itemsHtml = items.map((att, idx) =>
+      `<div class="attach-item" data-attach-idx="${idx}">
+        <span class="attach-num">#${idx + 1}</span>
+        <input type="text" data-attach-key="${field.name}" data-attach-idx="${idx}" data-attach-sub="fileName" placeholder="文件名（如：文章全文.pdf）" value="${escapeHtml(att.fileName || '')}">
+        <input type="text" data-attach-key="${field.name}" data-attach-idx="${idx}" data-attach-sub="fileUrl" placeholder="文件下载链接（URL）" value="${escapeHtml(att.fileUrl || '')}">
+        <button type="button" class="btn btn-outline btn-sm" onclick="handleImageUpload(this, 'input[data-attach-key=\\'${field.name}\\'][data-attach-idx=\\'${idx}\\'][data-attach-sub=\\'fileUrl\\']')">上传</button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="removeAttachItem('${field.name}', ${idx})">×</button>
+      </div>`
+    ).join('');
+    return `<div class="field" data-field="${field.name}">
+      <label>${field.label} ${req}</label>
+      <div class="hint" style="margin-bottom:10px;">支持上传Word、PDF等文件。上传后生成下载链接。</div>
+      <div id="attach-container-${field.name}">${itemsHtml || '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">暂无附件</div>'}</div>
+      <button class="list-add" type="button" onclick="addAttachItem('${field.name}')">+ 添加附件</button>
     </div>`;
   }
 
@@ -995,6 +1097,24 @@ function collectFormData() {
         items.push(item);
       });
       data[f.name] = items;
+    } else if (f.type === 'richtext') {
+      const editor = document.querySelector(`[data-key="${f.name}"]`);
+      data[f.name] = editor ? editor.innerHTML : '';
+    } else if (f.type === 'attachments') {
+      const container = document.getElementById(`attach-container-${f.name}`);
+      const items = [];
+      if (container) {
+        Array.from(container.querySelectorAll('.attach-item')).forEach(row => {
+          const fnInput = row.querySelector('input[data-attach-sub="fileName"]');
+          const fuInput = row.querySelector('input[data-attach-sub="fileUrl"]');
+          const fileName = fnInput ? fnInput.value.trim() : '';
+          const fileUrl = fuInput ? fuInput.value.trim() : '';
+          if (fileName || fileUrl) {
+            items.push({ fileName, fileUrl });
+          }
+        });
+      }
+      data[f.name] = items;
     } else {
       const input = document.querySelector(`[data-key="${f.name}"]`);
       if (input) {
@@ -1060,7 +1180,76 @@ async function deleteItem(key, path) {
   }
 }
 
-// ===== Utils =====
+// ===== Rich Text Editor =====
+function bindRTEToolbars() {
+  document.querySelectorAll('[data-rte-toolbar]').forEach(toolbar => {
+    const fieldName = toolbar.dataset.rteToolbar;
+    const editor = document.querySelector(`[data-key="${fieldName}"]`);
+    if (!editor) return;
+
+    toolbar.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const cmd = this.dataset.cmd;
+        const arg = this.dataset.arg || null;
+
+        if (cmd === 'createLink') {
+          const url = prompt('请输入链接URL:');
+          if (url) document.execCommand(cmd, false, url);
+        } else if (cmd === 'insertImage') {
+          const url = prompt('请输入图片URL:');
+          if (url) document.execCommand(cmd, false, url);
+        } else if (cmd === 'formatBlock') {
+          document.execCommand(cmd, false, arg);
+        } else {
+          document.execCommand(cmd, false, null);
+        }
+        editor.focus();
+      });
+    });
+  });
+}
+
+// ===== Attachments =====
+function addAttachItem(fieldName) {
+  const container = document.getElementById(`attach-container-${fieldName}`);
+  // Remove empty placeholder if present
+  const placeholder = container.querySelector('div:not(.attach-item)');
+  if (placeholder) placeholder.remove();
+
+  const idx = container.querySelectorAll('.attach-item').length;
+  const div = document.createElement('div');
+  div.className = 'attach-item';
+  div.dataset.attachIdx = idx;
+  div.innerHTML = `<span class="attach-num">#${idx + 1}</span>
+    <input type="text" data-attach-key="${fieldName}" data-attach-idx="${idx}" data-attach-sub="fileName" placeholder="文件名（如：文章全文.pdf）">
+    <input type="text" data-attach-key="${fieldName}" data-attach-idx="${idx}" data-attach-sub="fileUrl" placeholder="文件下载链接（URL）">
+    <button type="button" class="btn btn-outline btn-sm" onclick="handleImageUpload(this, 'input[data-attach-key=\\'${fieldName}\\'][data-attach-idx=\\'${idx}\\'][data-attach-sub=\\'fileUrl\\']')">上传</button>
+    <button type="button" class="btn btn-danger btn-sm" onclick="removeAttachItem('${fieldName}', ${idx})">×</button>`;
+  container.appendChild(div);
+}
+
+function removeAttachItem(fieldName, idx) {
+  const container = document.getElementById(`attach-container-${fieldName}`);
+  const items = container.querySelectorAll('.attach-item');
+  if (items[idx]) items[idx].remove();
+  // Reindex
+  const remaining = container.querySelectorAll('.attach-item');
+  remaining.forEach((item, i) => {
+    item.dataset.attachIdx = i;
+    item.querySelector('.attach-num').textContent = `#${i + 1}`;
+    item.querySelectorAll('input').forEach(input => input.dataset.attachIdx = i);
+    const btns = item.querySelectorAll('button');
+    if (btns.length >= 2) {
+      btns[0].setAttribute('onclick', `handleImageUpload(this, 'input[data-attach-key=\\'${fieldName}\\'][data-attach-idx=\\'${i}\\'][data-attach-sub=\\'fileUrl\\']')`);
+      btns[1].setAttribute('onclick', `removeAttachItem('${fieldName}', ${i})`);
+    }
+  });
+  // Show placeholder if empty
+  if (remaining.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">暂无附件</div>';
+  }
+}
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
