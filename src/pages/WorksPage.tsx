@@ -15,10 +15,10 @@ export default function WorksPage({ onSeriesClick }: WorksPageProps) {
       {/* Page Title */}
       <div className="px-6 md:px-10 lg:px-16 mb-16 md:mb-24">
         <h1 className="font-serif-display text-4xl md:text-6xl lg:text-7xl font-light tracking-tight">
-          作品
+          摄影
         </h1>
         <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground mt-3">
-          Works · {series.length} Series
+          Photography · {series.length} Series
         </div>
       </div>
 
@@ -33,8 +33,19 @@ export default function WorksPage({ onSeriesClick }: WorksPageProps) {
             className="group relative border-t border-border last:border-b overflow-hidden"
           >
             <div className="px-6 md:px-10 lg:px-16 py-8 md:py-12 flex items-center justify-between">
-              {/* Left: Index + Title */}
-              <div className="flex items-baseline gap-6 md:gap-10">
+              {/* Left: Cover thumbnail + Index + Title */}
+              <div className="flex items-center gap-6 md:gap-10">
+                {/* Cover thumbnail - always visible */}
+                <div className="hidden md:block w-16 h-20 lg:w-20 lg:h-28 overflow-hidden flex-shrink-0 bg-muted">
+                  {s.cover && (
+                    <img
+                      src={s.cover}
+                      alt={s.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
                 <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-mono">
                   {String(index + 1).padStart(2, '0')}
                 </span>
@@ -66,19 +77,33 @@ export default function WorksPage({ onSeriesClick }: WorksPageProps) {
               </div>
             </div>
 
-            {/* Hover Preview Image */}
+            {/* Mobile cover image - shown below title on mobile */}
+            <div className="md:hidden px-6 pb-6">
+              {s.cover && (
+                <div className="w-full h-40 overflow-hidden bg-muted">
+                  <img
+                    src={s.cover}
+                    alt={s.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Hover Preview Image - large floating preview on desktop */}
             <div
-              className={`absolute right-6 md:right-10 lg:right-16 top-1/2 -translate-y-1/2 w-32 md:w-48 lg:w-64 aspect-[3/4] overflow-hidden pointer-events-none transition-all duration-500 ${
+              className={`hidden md:block absolute right-6 md:right-10 lg:right-16 top-1/2 -translate-y-1/2 w-32 md:w-48 lg:w-64 aspect-[3/4] overflow-hidden pointer-events-none transition-all duration-500 ${
                 hoveredId === s.id
-                  ? 'opacity-100 translate-x-0 scale-100'
+                  ? 'opacity-90 translate-x-0 scale-100'
                   : 'opacity-0 translate-x-8 scale-95'
               }`}
-              style={{ zIndex: -1 }}
+              style={{ zIndex: 10 }}
             >
               <img
                 src={s.cover}
                 alt={s.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover shadow-2xl"
               />
             </div>
           </button>
