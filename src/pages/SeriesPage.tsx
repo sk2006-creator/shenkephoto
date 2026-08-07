@@ -61,16 +61,16 @@ export default function SeriesPage({ seriesData, onBack }: SeriesPageProps) {
               className="group relative overflow-hidden bg-muted"
               style={{ animation: `imageFadeIn 0.6s ease-out ${index * 0.05}s both` }}
             >
-              <div className="aspect-[3/4] overflow-hidden">
+              <div className="aspect-square flex items-center justify-center p-3 md:p-4">
                 <img
                   src={photo.src}
                   alt={photo.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                  className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-700 group-hover:scale-[1.02]"
                   loading="lazy"
                 />
               </div>
               {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400">
                 <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
                   <div className="text-white text-sm font-light">{photo.title}</div>
                   {photo.caption && (
