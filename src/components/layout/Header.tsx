@@ -17,6 +17,13 @@ const navItems: { id: PageId; label: string; labelEn: string }[] = [
   { id: 'contact', label: '联系方式', labelEn: 'Contact' },
 ];
 
+/** Map detail pages back to their parent nav item */
+function getParentPage(page: PageId): PageId {
+  if (page === 'pressDetail') return 'press';
+  if (page === 'writingDetail') return 'writing';
+  return page;
+}
+
 export default function Header({ currentPage, onNavigate }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -32,6 +39,8 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
     onNavigate(page);
     setMenuOpen(false);
   };
+
+  const activeParent = getParentPage(currentPage);
 
   return (
     <>
@@ -62,7 +71,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
               <button
                 key={item.id}
                 onClick={() => handleNav(item.id)}
-                className={`nav-link ${currentPage === item.id ? 'nav-link-active' : ''}`}
+                className={`nav-link ${activeParent === item.id ? 'nav-link-active' : ''}`}
               >
                 {item.label}
               </button>
@@ -93,7 +102,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
               key={item.id}
               onClick={() => handleNav(item.id)}
               className={`text-lg tracking-[0.15em] transition-colors ${
-                currentPage === item.id ? 'text-foreground font-medium' : 'text-muted-foreground'
+                activeParent === item.id ? 'text-foreground font-medium' : 'text-muted-foreground'
               }`}
               style={{ animation: `pageEnter 0.4s ease-out ${i * 0.05}s both` }}
             >
