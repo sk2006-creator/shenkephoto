@@ -3,8 +3,6 @@ export interface Photo {
   src: string;
   title: string;
   caption?: string;
-  width: number;
-  height: number;
 }
 
 export interface Series {
