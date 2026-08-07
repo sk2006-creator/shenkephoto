@@ -1,10 +1,16 @@
 {
-  "email": "studio@shenke.photo",
+  "email": "sk2006@gmail.com",
   "studioLocation": "杭州 · 中国",
   "studioNote": "工作室接受预约访问，请邮件联系",
   "galleries": [
-    { "name": "玛吉画廊，上海", "role": "代理画廊" },
-    { "name": "M97画廊，上海", "role": "合作画廊" }
+    {
+      "name": "玛吉画廊，上海",
+      "role": "代理画廊"
+    },
+    {
+      "name": "M97画廊，上海",
+      "role": "合作画廊"
+    }
   ],
   "mediaInquiry": "如有采访、评论、展览邀请或作品收藏意向，请发送邮件至上述邮箱，我们会在五个工作日内回复。"
 }
