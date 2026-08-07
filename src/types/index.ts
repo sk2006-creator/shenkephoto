@@ -60,7 +60,17 @@ export interface ArtistInfo {
   awards: { year: string; title: string }[];
 }
 
-export type PageId = 'works' | 'press' | 'shop' | 'films' | 'about' | 'contact';
+export interface WritingItem {
+  id: string;
+  title: string;
+  author: string;
+  media: string;
+  date: string;
+  url?: string;
+  excerpt?: string;
+}
+
+export type PageId = 'home' | 'works' | 'films' | 'press' | 'writing' | 'shop' | 'about' | 'contact';
 
 export interface NavState {
   page: PageId;
