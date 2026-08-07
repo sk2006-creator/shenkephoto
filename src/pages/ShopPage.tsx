@@ -60,12 +60,12 @@ export default function ShopPage() {
               className="group"
               style={{ animation: `imageFadeIn 0.5s ease-out ${index * 0.06}s both` }}
             >
-              {/* Image */}
-              <div className="relative overflow-hidden bg-muted aspect-[4/5] mb-4">
+              {/* Image - original ratio in square bg */}
+              <div className="relative overflow-hidden bg-muted aspect-square flex items-center justify-center p-4 mb-4">
                 <img
                   src={item.image}
                   alt={item.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                  className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-700 group-hover:scale-[1.03]"
                   loading="lazy"
                 />
                 {item.edition && (
