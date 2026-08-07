@@ -2,9 +2,9 @@
   "id": "borderlines",
   "title": "第一组作品",
   "titleEn": "Borderlines",
-  "year": "2021",
+  "year": "2026",
   "description": "这是第一组作品的文字描述",
-  "cover": "https://picsum.photos/seed/borderlines-cover/1600/1000",
+  "cover": "https://cdn.jsdelivr.net/gh/sk2006-creator/shenkephoto@main/public/images/1786068660710_img20260806_11594722.jpg",
   "photos": [
     {
       "id": "bl-1",
