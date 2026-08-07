@@ -265,7 +265,7 @@ const COLLECTIONS = {
     sortBy: 'date',
     sortDesc: true,
     fields: [
-      { name: 'id', label: 'ID', type: 'text', required: true },
+      { name: 'id', label: 'ID', type: 'text', required: true, autoId: true, idPrefix: 'p' },
       { name: 'title', label: '文章标题', type: 'text', required: true },
       { name: 'author', label: '作者', type: 'text', required: true },
       { name: 'media', label: '媒体/出版物', type: 'text', required: true },
@@ -286,7 +286,7 @@ const COLLECTIONS = {
     sortBy: 'date',
     sortDesc: true,
     fields: [
-      { name: 'id', label: 'ID', type: 'text', required: true },
+      { name: 'id', label: 'ID', type: 'text', required: true, autoId: true, idPrefix: 'w' },
       { name: 'title', label: '文章标题', type: 'text', required: true },
       { name: 'author', label: '作者', type: 'text', required: true },
       { name: 'media', label: '媒体/出版物', type: 'text', required: true },
@@ -395,6 +395,7 @@ let currentView = null; // 'list' | 'edit' | 'single'
 let currentCollection = null;
 let currentFile = null; // for editing existing file
 let currentData = null;
+let currentRTEEditor = null; // active rich text editor for image/video insert
 
 // ============================================================
 // GITHUB API
@@ -601,6 +602,16 @@ function renderApp() {
         <div class="loading"><div class="spinner"></div><br>\u52A0\u8F7D\u4E2D...</div>
       </div>
     </div>
+    <div id="rte-img-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:10000;align-items:center;justify-content:center;">
+      <div style="background:white;border-radius:8px;padding:32px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+        <h3 style="margin:0 0 20px;font-size:18px;font-weight:500;">\u63D2\u5165\u56FE\u7247</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button class="btn" id="rte-img-upload" style="padding:12px 20px;font-size:15px;">\u{1F4C1} \u4ECE\u672C\u5730\u4E0A\u4F20\u56FE\u7247</button>
+          <button class="btn btn-outline" id="rte-img-url" style="padding:12px 20px;font-size:15px;">\u{1F517} \u8F93\u5165\u56FE\u7247\u94FE\u63A5</button>
+          <button class="btn btn-outline" id="rte-img-cancel" style="margin-top:6px;border-color:#ddd;color:#888;">\u53D6\u6D88</button>
+        </div>
+      </div>
+    </div>
   `);
   // Default to first collection
   showCollection('works');
@@ -728,16 +739,44 @@ function renderReadonlyFields(fields, data) {
 }
 
 // ===== Editor =====
-function newItem(key) {
+async function newItem(key) {
   currentFile = null;
   const col = COLLECTIONS[key];
   const defaultData = {};
+
+  // Auto-generate ID for collections with autoId
+  const idField = col.fields.find(f => f.autoId);
+  let autoId = '';
+  if (idField) {
+    autoId = await autoGenerateId(key, idField.idPrefix || '');
+  }
+
   col.fields.forEach(f => {
     if (f.default !== undefined) defaultData[f.name] = f.default;
     else if (f.type === 'list') defaultData[f.name] = [];
+    else if (f.autoId) defaultData[f.name] = autoId;
     else defaultData[f.name] = '';
   });
   renderEditor(key, defaultData, null);
+}
+
+async function autoGenerateId(key, prefix) {
+  const col = COLLECTIONS[key];
+  try {
+    const files = await ghListDir(col.dir);
+    let maxNum = 0;
+    files.forEach(f => {
+      if (!f.name.endsWith('.json')) return;
+      const name = f.name.replace('.json', '');
+      if (name.startsWith(prefix)) {
+        const num = parseInt(name.slice(prefix.length));
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      }
+    });
+    return prefix + (maxNum + 1);
+  } catch (e) {
+    return prefix + '1';
+  }
 }
 
 async function editItem(key, path) {
@@ -902,6 +941,7 @@ function renderField(field, value) {
         <span class="sep"></span>
         <button type="button" data-cmd="createLink" title="插入链接">🔗</button>
         <button type="button" data-cmd="insertImage" title="插入图片">🖼</button>
+        <button type="button" data-cmd="insertVideo" title="插入视频">🎬</button>
         <button type="button" data-cmd="formatBlock" data-arg="blockquote" title="引用">❝</button>
         <span class="sep"></span>
         <button type="button" data-cmd="insertHorizontalRule" title="分隔线">—</button>
@@ -1003,6 +1043,18 @@ function renderField(field, value) {
   }
 
   // Default: text input
+  if (field.autoId) {
+    if (currentFile) {
+      // Editing: show read-only
+      return `<div class="field" data-field="${field.name}">
+        <label>${field.label}</label>
+        <div style="padding:10px 12px;background:#f5f5f5;border:1px solid var(--border);border-radius:var(--radius);color:#888;font-family:monospace;font-size:14px;">${escapeHtml(String(val))}</div>
+        <input type="hidden" data-key="${field.name}" value="${escapeHtml(String(val))}">
+      </div>`;
+    }
+    // Creating new: hidden
+    return `<div class="field" data-field="${field.name}" style="display:none;"><input type="hidden" data-key="${field.name}" value="${escapeHtml(String(val))}"></div>`;
+  }
   if (isImageField(field.name)) {
     return `<div class="field" data-field="${field.name}">
       <label>${field.label} ${req}</label>
@@ -1197,8 +1249,18 @@ function bindRTEToolbars() {
           const url = prompt('请输入链接URL:');
           if (url) document.execCommand(cmd, false, url);
         } else if (cmd === 'insertImage') {
-          const url = prompt('请输入图片URL:');
-          if (url) document.execCommand(cmd, false, url);
+          currentRTEEditor = editor;
+          showImageModal();
+        } else if (cmd === 'insertVideo') {
+          currentRTEEditor = editor;
+          const url = prompt('请输入视频嵌入链接（支持 Bilibili / YouTube / Vimeo 的 iframe 链接）：\n\n也可以直接粘贴视频页面地址。');
+          if (url) {
+            // Build responsive video wrapper
+            let embedUrl = url.trim();
+            // Auto-convert common video URLs to embed format if needed
+            const wrapper = '<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;margin:1.5em 0;"><iframe src="' + escapeHtml(embedUrl) + '" style="position:absolute;top:0;left:0;width:100%;height:100%;" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>';
+            document.execCommand('insertHTML', false, wrapper);
+          }
         } else if (cmd === 'formatBlock') {
           document.execCommand(cmd, false, arg);
         } else {
@@ -1208,6 +1270,74 @@ function bindRTEToolbars() {
       });
     });
   });
+
+  // Bind image modal buttons (only once)
+  bindImageModal();
+}
+
+let imageModalBound = false;
+function bindImageModal() {
+  if (imageModalBound) return;
+  imageModalBound = true;
+
+  const modal = document.getElementById('rte-img-modal');
+  if (!modal) return;
+
+  // Upload button
+  document.getElementById('rte-img-upload')?.addEventListener('click', function() {
+    hideImageModal();
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.onchange = function() {
+      if (!fileInput.files[0]) return;
+      const file = fileInput.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        toast('图片大小不能超过5MB', 'error');
+        return;
+      }
+      uploadAnyFile(file, false, function(url) {
+        if (currentRTEEditor) {
+          currentRTEEditor.focus();
+          document.execCommand('insertImage', false, url);
+          toast('图片已插入');
+        }
+      }, function(err) {
+        toast('上传失败: ' + err, 'error');
+      });
+    };
+    fileInput.click();
+  });
+
+  // URL button
+  document.getElementById('rte-img-url')?.addEventListener('click', function() {
+    hideImageModal();
+    setTimeout(() => {
+      const url = prompt('请输入图片链接URL:');
+      if (url && currentRTEEditor) {
+        currentRTEEditor.focus();
+        document.execCommand('insertImage', false, url.trim());
+      }
+    }, 200);
+  });
+
+  // Cancel button
+  document.getElementById('rte-img-cancel')?.addEventListener('click', hideImageModal);
+
+  // Close on backdrop click
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) hideImageModal();
+  });
+}
+
+function showImageModal() {
+  const modal = document.getElementById('rte-img-modal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function hideImageModal() {
+  const modal = document.getElementById('rte-img-modal');
+  if (modal) modal.style.display = 'none';
 }
 
 // ===== Attachments =====
