@@ -29,10 +29,11 @@ export default function Footer({ onNavigate }: FooterProps) {
             </div>
             <div className="flex flex-col gap-2">
               {([
-                { id: 'works', label: '作品' },
-                { id: 'press', label: '印刷与传播' },
+                { id: 'works', label: '摄影' },
+                { id: 'films', label: '电影' },
+                { id: 'press', label: '媒体' },
+                { id: 'writing', label: '写作' },
                 { id: 'shop', label: '商店' },
-                { id: 'films', label: '影片' },
                 { id: 'about', label: '艺术家介绍' },
                 { id: 'contact', label: '联系方式' },
               ] as { id: PageId; label: string }[]).map((item) => (
