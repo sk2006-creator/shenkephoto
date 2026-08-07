@@ -35,13 +35,13 @@ export default function WorksPage({ onSeriesClick }: WorksPageProps) {
             <div className="px-6 md:px-10 lg:px-16 py-8 md:py-12 flex items-center justify-between">
               {/* Left: Cover thumbnail + Index + Title */}
               <div className="flex items-center gap-6 md:gap-10">
-                {/* Cover thumbnail - always visible */}
-                <div className="hidden md:block w-16 h-20 lg:w-20 lg:h-28 overflow-hidden flex-shrink-0 bg-muted">
+                {/* Cover thumbnail - always visible, original ratio in square bg */}
+                <div className="hidden md:flex w-16 h-16 lg:w-20 lg:h-20 flex-shrink-0 bg-muted items-center justify-center p-1">
                   {s.cover && (
                     <img
                       src={s.cover}
                       alt={s.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
                     />
                   )}
@@ -77,25 +77,25 @@ export default function WorksPage({ onSeriesClick }: WorksPageProps) {
               </div>
             </div>
 
-            {/* Mobile cover image - shown below title on mobile */}
+            {/* Mobile cover image - original ratio in square bg */}
             <div className="md:hidden px-6 pb-6">
               {s.cover && (
-                <div className="w-full h-40 overflow-hidden bg-muted">
+                <div className="w-full aspect-[3/2] flex items-center justify-center bg-muted p-3">
                   <img
                     src={s.cover}
                     alt={s.title}
-                    className="w-full h-full object-cover"
+                    className="max-w-full max-h-full w-auto h-auto object-contain"
                     loading="lazy"
                   />
                 </div>
               )}
             </div>
 
-            {/* Hover Preview Image - large floating preview on desktop */}
+            {/* Hover Preview Image - large floating preview on desktop, original ratio */}
             <div
-              className={`hidden md:block absolute right-6 md:right-10 lg:right-16 top-1/2 -translate-y-1/2 w-32 md:w-48 lg:w-64 aspect-[3/4] overflow-hidden pointer-events-none transition-all duration-500 ${
+              className={`hidden md:block absolute right-6 md:right-10 lg:right-16 top-1/2 -translate-y-1/2 w-32 md:w-48 lg:w-64 aspect-square bg-muted flex items-center justify-center p-2 pointer-events-none transition-all duration-500 ${
                 hoveredId === s.id
-                  ? 'opacity-90 translate-x-0 scale-100'
+                  ? 'opacity-95 translate-x-0 scale-100'
                   : 'opacity-0 translate-x-8 scale-95'
               }`}
               style={{ zIndex: 10 }}
@@ -103,7 +103,7 @@ export default function WorksPage({ onSeriesClick }: WorksPageProps) {
               <img
                 src={s.cover}
                 alt={s.title}
-                className="w-full h-full object-cover shadow-2xl"
+                className="max-w-full max-h-full w-auto h-auto object-contain shadow-2xl"
               />
             </div>
           </button>
