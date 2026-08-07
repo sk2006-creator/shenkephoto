@@ -10,14 +10,18 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Cache for 30 seconds on Vercel CDN, allow stale for 60s during revalidation
-  res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
+  // Cache for 10 seconds on Vercel CDN, allow stale for 30s during revalidation
+  res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=30');
 
   const RAW_BASE = 'https://raw.githubusercontent.com/sk2006-creator/shenkephoto/main';
 
   async function fetchJson(path) {
     try {
-      const resp = await fetch(`${RAW_BASE}/${path}`);
+      // Add cache-busting to bypass GitHub's CDN cache on raw.githubusercontent.com
+      const cacheBuster = Math.floor(Date.now() / 15000); // changes every 15s
+      const resp = await fetch(`${RAW_BASE}/${path}?t=${cacheBuster}`, {
+        headers: { 'Cache-Control': 'no-cache' },
+      });
       if (!resp.ok) return null;
       return await resp.json();
     } catch {
