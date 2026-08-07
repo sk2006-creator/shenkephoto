@@ -42,7 +42,7 @@ function renderAttachments(attachments: Attachment[]) {
 export default function ArticleDetailPage({ article, backLabel, onBack }: ArticleDetailPageProps) {
   return (
     <div className="page-enter pt-28 md:pt-32">
-      <div className="px-6 md:px-10 lg:px-16">
+      <div className="px-6 md:px-10 lg:px-16 max-w-3xl mx-auto">
         {/* Back link */}
         <button
           onClick={onBack}
