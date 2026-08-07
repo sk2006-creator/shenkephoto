@@ -13,8 +13,8 @@ const navItems: { id: PageId; label: string; labelEn: string }[] = [
   { id: 'press', label: '媒体', labelEn: 'Press' },
   { id: 'writing', label: '写作', labelEn: 'Writing' },
   { id: 'shop', label: '商店', labelEn: 'Shop' },
-  { id: 'about', label: '艺术家介绍', labelEn: 'About' },
-  { id: 'contact', label: '联系方式', labelEn: 'Contact' },
+  { id: 'about', label: '阅历', labelEn: 'About' },
+  { id: 'contact', label: '联络', labelEn: 'Contact' },
 ];
 
 /** Map detail pages back to their parent nav item */
