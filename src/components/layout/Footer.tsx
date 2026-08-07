@@ -34,8 +34,8 @@ export default function Footer({ onNavigate }: FooterProps) {
                 { id: 'press', label: '媒体' },
                 { id: 'writing', label: '写作' },
                 { id: 'shop', label: '商店' },
-                { id: 'about', label: '艺术家介绍' },
-                { id: 'contact', label: '联系方式' },
+                { id: 'about', label: '阅历' },
+                { id: 'contact', label: '联络' },
               ] as { id: PageId; label: string }[]).map((item) => (
                 <button
                   key={item.id}
