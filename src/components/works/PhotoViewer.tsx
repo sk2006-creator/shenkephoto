@@ -180,11 +180,11 @@ export default function PhotoViewer({
                 }`}
                 style={{ animation: `imageFadeIn 0.4s ease-out ${index * 0.03}s both` }}
               >
-                <div className="aspect-[3/4] overflow-hidden">
+                <div className="aspect-square flex items-center justify-center p-2">
                   <img
                     src={photo.src}
                     alt={photo.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="max-w-full max-h-full w-auto h-auto object-contain transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
                 </div>
