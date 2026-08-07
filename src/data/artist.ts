@@ -1,4 +1,4 @@
-import type { Series, PressItem, ShopItem, Film, ArtistInfo } from '@/types';
+import type { Series, PressItem, ShopItem, Film, ArtistInfo, WritingItem } from '@/types';
 
 // Single-file content imports
 import artistData from '@/content/artist.json';
@@ -9,6 +9,7 @@ const worksModules = import.meta.glob('@/content/works/*.json', { eager: true })
 const pressModules = import.meta.glob('@/content/press/*.json', { eager: true });
 const shopModules = import.meta.glob('@/content/shop/*.json', { eager: true });
 const filmsModules = import.meta.glob('@/content/films/*.json', { eager: true });
+const writingModules = import.meta.glob('@/content/writing/*.json', { eager: true });
 
 // Artist info
 export const artist: ArtistInfo = artistData as ArtistInfo;
@@ -31,6 +32,11 @@ export const shopItems: ShopItem[] = Object.values(shopModules)
 export const films: Film[] = Object.values(filmsModules)
   .map((m) => (m as { default: Film }).default)
   .sort((a, b) => parseInt(b.year) - parseInt(a.year));
+
+// Writing — sorted by date descending
+export const writingItems: WritingItem[] = Object.values(writingModules)
+  .map((m) => (m as { default: WritingItem }).default)
+  .sort((a, b) => b.date.localeCompare(a.date));
 
 // Contact info (managed via CMS)
 export interface ContactInfo {
