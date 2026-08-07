@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useContent } from '@/hooks/useContent';
 import type { Series } from '@/types';
 
@@ -7,7 +6,6 @@ interface WorksPageProps {
 }
 
 export default function WorksPage({ onSeriesClick }: WorksPageProps) {
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const { series } = useContent();
 
   return (
@@ -28,8 +26,6 @@ export default function WorksPage({ onSeriesClick }: WorksPageProps) {
           <button
             key={s.id}
             onClick={() => onSeriesClick(s.id)}
-            onMouseEnter={() => setHoveredId(s.id)}
-            onMouseLeave={() => setHoveredId(null)}
             className="group relative border-t border-border last:border-b overflow-hidden"
           >
             <div className="px-6 md:px-10 lg:px-16 py-8 md:py-12 flex items-center justify-between">
@@ -89,22 +85,6 @@ export default function WorksPage({ onSeriesClick }: WorksPageProps) {
                   />
                 </div>
               )}
-            </div>
-
-            {/* Hover Preview Image - large floating preview on desktop, original ratio */}
-            <div
-              className={`hidden md:block absolute right-6 md:right-10 lg:right-16 top-1/2 -translate-y-1/2 w-32 md:w-48 lg:w-64 aspect-square bg-muted flex items-center justify-center p-2 pointer-events-none transition-all duration-500 ${
-                hoveredId === s.id
-                  ? 'opacity-95 translate-x-0 scale-100'
-                  : 'opacity-0 translate-x-8 scale-95'
-              }`}
-              style={{ zIndex: 10 }}
-            >
-              <img
-                src={s.cover}
-                alt={s.title}
-                className="max-w-full max-h-full w-auto h-auto object-contain shadow-2xl"
-              />
             </div>
           </button>
         ))}
