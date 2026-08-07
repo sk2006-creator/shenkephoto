@@ -19,9 +19,10 @@ function App() {
   const [nav, setNav] = useState<NavState>({ page: 'home' });
   const content = useContent();
 
-  // Scroll to top on page change
+  // Scroll to top & refresh content on page change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
+    content.refresh();
   }, [nav.page, nav.seriesId, nav.itemId]);
 
   const handleNavigate = (page: PageId) => {
