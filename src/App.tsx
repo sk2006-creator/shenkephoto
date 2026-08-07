@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './App.css';
-import type { PageId, NavState } from '@/types';
+import type { PageId, NavState, PressItem, WritingItem } from '@/types';
 import { useContent } from '@/hooks/useContent';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -9,6 +9,7 @@ import WorksPage from '@/pages/WorksPage';
 import SeriesPage from '@/pages/SeriesPage';
 import PressPage from '@/pages/PressPage';
 import WritingPage from '@/pages/WritingPage';
+import ArticleDetailPage from '@/pages/ArticleDetailPage';
 import ShopPage from '@/pages/ShopPage';
 import FilmsPage from '@/pages/FilmsPage';
 import AboutPage from '@/pages/AboutPage';
@@ -21,7 +22,7 @@ function App() {
   // Scroll to top on page change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [nav.page, nav.seriesId]);
+  }, [nav.page, nav.seriesId, nav.itemId]);
 
   const handleNavigate = (page: PageId) => {
     setNav({ page });
@@ -35,8 +36,32 @@ function App() {
     setNav({ page: 'works' });
   };
 
+  const handlePressItemClick = (item: PressItem) => {
+    setNav({ page: 'pressDetail', itemId: item.id });
+  };
+
+  const handleWritingItemClick = (item: WritingItem) => {
+    setNav({ page: 'writingDetail', itemId: item.id });
+  };
+
+  const handleBackToPress = () => {
+    setNav({ page: 'press' });
+  };
+
+  const handleBackToWriting = () => {
+    setNav({ page: 'writing' });
+  };
+
   const currentSeries = nav.seriesId
     ? content.series.find((s) => s.id === nav.seriesId)
+    : null;
+
+  const currentPressItem = nav.itemId && nav.page === 'pressDetail'
+    ? content.pressItems.find((p) => p.id === nav.itemId)
+    : null;
+
+  const currentWritingItem = nav.itemId && nav.page === 'writingDetail'
+    ? content.writingItems.find((w) => w.id === nav.itemId)
     : null;
 
   const renderPage = () => {
@@ -51,6 +76,30 @@ function App() {
       );
     }
 
+    // Press detail page
+    if (nav.page === 'pressDetail' && currentPressItem) {
+      return (
+        <ArticleDetailPage
+          key={currentPressItem.id}
+          article={currentPressItem}
+          backLabel="返回媒体"
+          onBack={handleBackToPress}
+        />
+      );
+    }
+
+    // Writing detail page
+    if (nav.page === 'writingDetail' && currentWritingItem) {
+      return (
+        <ArticleDetailPage
+          key={currentWritingItem.id}
+          article={currentWritingItem}
+          backLabel="返回写作"
+          onBack={handleBackToWriting}
+        />
+      );
+    }
+
     switch (nav.page) {
       case 'home':
         return <HomePage onNavigate={handleNavigate} onSeriesClick={handleSeriesClick} />;
@@ -59,9 +108,9 @@ function App() {
       case 'films':
         return <FilmsPage />;
       case 'press':
-        return <PressPage />;
+        return <PressPage onItemClick={handlePressItemClick} />;
       case 'writing':
-        return <WritingPage />;
+        return <WritingPage onItemClick={handleWritingItemClick} />;
       case 'shop':
         return <ShopPage />;
       case 'about':
