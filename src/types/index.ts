@@ -15,6 +15,11 @@ export interface Series {
   photos: Photo[];
 }
 
+export interface Attachment {
+  fileName: string;
+  fileUrl: string;
+}
+
 export interface PressItem {
   id: string;
   title: string;
@@ -23,6 +28,20 @@ export interface PressItem {
   date: string;
   url?: string;
   excerpt?: string;
+  body?: string;
+  attachments?: Attachment[];
+}
+
+export interface WritingItem {
+  id: string;
+  title: string;
+  author: string;
+  media: string;
+  date: string;
+  url?: string;
+  excerpt?: string;
+  body?: string;
+  attachments?: Attachment[];
 }
 
 export interface ShopItem {
@@ -58,19 +77,10 @@ export interface ArtistInfo {
   awards: { year: string; title: string }[];
 }
 
-export interface WritingItem {
-  id: string;
-  title: string;
-  author: string;
-  media: string;
-  date: string;
-  url?: string;
-  excerpt?: string;
-}
-
-export type PageId = 'home' | 'works' | 'films' | 'press' | 'writing' | 'shop' | 'about' | 'contact';
+export type PageId = 'home' | 'works' | 'films' | 'press' | 'writing' | 'shop' | 'about' | 'contact' | 'pressDetail' | 'writingDetail';
 
 export interface NavState {
   page: PageId;
   seriesId?: string;
+  itemId?: string;
 }
