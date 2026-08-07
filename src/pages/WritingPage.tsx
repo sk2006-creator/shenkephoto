@@ -1,6 +1,16 @@
 import { useContent } from '@/hooks/useContent';
+import type { WritingItem } from '@/types';
 
-export default function WritingPage() {
+interface WritingPageProps {
+  onItemClick: (item: WritingItem) => void;
+}
+
+function truncateExcerpt(text: string, maxLen = 200): string {
+  if (text.length <= maxLen) return text;
+  return text.slice(0, maxLen).replace(/\s+\S*$/, '') + '…';
+}
+
+export default function WritingPage({ onItemClick }: WritingPageProps) {
   const { writingItems } = useContent();
   // Sort by date descending
   const sorted = [...writingItems].sort((a, b) =>
@@ -43,14 +53,17 @@ export default function WritingPage() {
                   </div>
                 </div>
 
-                {/* Title + Excerpt */}
-                <div className="md:col-span-7">
+                {/* Title + Excerpt — clickable */}
+                <div
+                  className="md:col-span-7 cursor-pointer"
+                  onClick={() => onItemClick(item)}
+                >
                   <h2 className="text-lg md:text-xl font-light leading-snug group-hover:text-foreground transition-colors">
                     {item.title}
                   </h2>
                   {item.excerpt && (
                     <p className="text-sm text-muted-foreground mt-3 leading-relaxed font-light max-w-2xl">
-                      {item.excerpt}
+                      {truncateExcerpt(item.excerpt)}
                     </p>
                   )}
                 </div>
