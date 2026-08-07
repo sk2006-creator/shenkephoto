@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
 import './App.css';
 import type { PageId, NavState } from '@/types';
-import { series } from '@/data/artist';
+import { useContent } from '@/hooks/useContent';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import HomePage from '@/pages/HomePage';
 import WorksPage from '@/pages/WorksPage';
 import SeriesPage from '@/pages/SeriesPage';
 import PressPage from '@/pages/PressPage';
+import WritingPage from '@/pages/WritingPage';
 import ShopPage from '@/pages/ShopPage';
 import FilmsPage from '@/pages/FilmsPage';
 import AboutPage from '@/pages/AboutPage';
 import ContactPage from '@/pages/ContactPage';
 
 function App() {
-  const [nav, setNav] = useState<NavState>({ page: 'works' });
+  const [nav, setNav] = useState<NavState>({ page: 'home' });
+  const content = useContent();
 
   // Scroll to top on page change
   useEffect(() => {
@@ -33,7 +36,7 @@ function App() {
   };
 
   const currentSeries = nav.seriesId
-    ? series.find((s) => s.id === nav.seriesId)
+    ? content.series.find((s) => s.id === nav.seriesId)
     : null;
 
   const renderPage = () => {
@@ -49,30 +52,37 @@ function App() {
     }
 
     switch (nav.page) {
+      case 'home':
+        return <HomePage onNavigate={handleNavigate} onSeriesClick={handleSeriesClick} />;
       case 'works':
         return <WorksPage onSeriesClick={handleSeriesClick} />;
-      case 'press':
-        return <PressPage />;
-      case 'shop':
-        return <ShopPage />;
       case 'films':
         return <FilmsPage />;
+      case 'press':
+        return <PressPage />;
+      case 'writing':
+        return <WritingPage />;
+      case 'shop':
+        return <ShopPage />;
       case 'about':
         return <AboutPage />;
       case 'contact':
         return <ContactPage />;
       default:
-        return <WorksPage onSeriesClick={handleSeriesClick} />;
+        return <HomePage onNavigate={handleNavigate} onSeriesClick={handleSeriesClick} />;
     }
   };
 
+  // Hide header/footer on homepage for a cleaner look
+  const isHome = nav.page === 'home' && !nav.seriesId;
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Header currentPage={nav.page} onNavigate={handleNavigate} />
+      {!isHome && <Header currentPage={nav.page} onNavigate={handleNavigate} />}
       <main className="flex-1">
         {renderPage()}
       </main>
-      <Footer onNavigate={handleNavigate} />
+      {!isHome && <Footer onNavigate={handleNavigate} />}
     </div>
   );
 }
