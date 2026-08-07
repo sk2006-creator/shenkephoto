@@ -8,51 +8,39 @@
   "photos": [
     {
       "id": "bl-1",
-      "src": "https://cdn.jsdelivr.net/gh/sk2006-creator/shenkephoto@main/public/images/1786068939614_img20260806_11554143.jpg",
-      "title": "建筑1#",
-      "caption": "2026.8.2，滨江",
-      "width": "1200",
-      "height": "1500"
+      "src": "https://cdn.jsdelivr.net/gh/sk2006-creator/shenkephoto@main/public/images/1786072864747_img20260806_12120997.jpg",
+      "title": "建筑1#重新上传",
+      "caption": "2026.8.2，滨江，园区"
     },
     {
       "id": "bl-2",
       "src": "https://cdn.jsdelivr.net/gh/sk2006-creator/shenkephoto@main/public/images/1786068956375_img20260806_11391052.jpg",
       "title": "建筑2#",
-      "caption": "2026.8.2，滨江",
-      "width": "1200",
-      "height": "1500"
+      "caption": "2026.8.2，滨江"
     },
     {
       "id": "bl-3",
       "src": "https://cdn.jsdelivr.net/gh/sk2006-creator/shenkephoto@main/public/images/1786068972941_img20260806_12034323.jpg",
       "title": "建筑3#",
-      "caption": "2026.8.2，滨江",
-      "width": "1200",
-      "height": "1500"
+      "caption": "2026.8.2，滨江"
     },
     {
       "id": "bl-4",
       "src": "https://cdn.jsdelivr.net/gh/sk2006-creator/shenkephoto@main/public/images/1786068988663_img20260806_12080228.jpg",
       "title": "建筑4#",
-      "caption": "2026.8.2，滨江",
-      "width": "1200",
-      "height": "1500"
+      "caption": "2026.8.2，滨江"
     },
     {
       "id": "bl-5",
       "src": "https://cdn.jsdelivr.net/gh/sk2006-creator/shenkephoto@main/public/images/1786069000780_img20260806_12202295.jpg",
       "title": "建筑5#",
-      "caption": "2026.8.2，滨江",
-      "width": "1500",
-      "height": "1200"
+      "caption": "2026.8.2，滨江"
     },
     {
       "id": "bl-6",
       "src": "https://cdn.jsdelivr.net/gh/sk2006-creator/shenkephoto@main/public/images/1786069018190_img20260806_12120997.jpg",
       "title": "建筑6#",
-      "caption": "2026.8.2，滨江",
-      "width": "1200",
-      "height": "1500"
+      "caption": "2026.8.2，滨江"
     }
   ]
 }
