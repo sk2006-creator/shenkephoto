@@ -19,7 +19,7 @@ export default function PressPage() {
       {/* Page Title */}
       <div className="px-6 md:px-10 lg:px-16 mb-16 md:mb-24">
         <h1 className="font-serif-display text-4xl md:text-6xl lg:text-7xl font-light tracking-tight">
-          印刷与传播
+          媒体
         </h1>
         <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground mt-3">
           Press & Critical Writing
