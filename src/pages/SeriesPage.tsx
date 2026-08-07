@@ -19,7 +19,7 @@ export default function SeriesPage({ seriesData, onBack }: SeriesPageProps) {
         className="px-6 md:px-10 lg:px-16 flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors mb-12"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        返回作品
+        返回摄影
       </button>
 
       {/* Series Header */}
