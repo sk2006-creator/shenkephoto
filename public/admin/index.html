@@ -185,7 +185,7 @@ const API = 'https://api.github.com';
 // Content collections configuration
 const COLLECTIONS = {
   works: {
-    label: '作品',
+    label: '摄影',
     icon: 'camera',
     dir: 'src/content/works',
     type: 'multi', // multiple files in directory
@@ -209,9 +209,28 @@ const COLLECTIONS = {
     ],
   },
   press: {
-    label: '印刷与传播',
+    label: '媒体',
     icon: 'newspaper',
     dir: 'src/content/press',
+    type: 'multi',
+    titleField: 'title',
+    subtitleField: 'media',
+    sortBy: 'date',
+    sortDesc: true,
+    fields: [
+      { name: 'id', label: 'ID', type: 'text', required: true },
+      { name: 'title', label: '文章标题', type: 'text', required: true },
+      { name: 'author', label: '作者', type: 'text', required: true },
+      { name: 'media', label: '媒体/出版物', type: 'text', required: true },
+      { name: 'date', label: '发布日期', type: 'date', required: true },
+      { name: 'excerpt', label: '摘要', type: 'textarea' },
+      { name: 'url', label: '原文链接', type: 'text' },
+    ],
+  },
+  writing: {
+    label: '写作',
+    icon: 'edit_note',
+    dir: 'src/content/writing',
     type: 'multi',
     titleField: 'title',
     subtitleField: 'media',
@@ -250,7 +269,7 @@ const COLLECTIONS = {
     ],
   },
   films: {
-    label: '影片',
+    label: '电影',
     icon: 'film',
     dir: 'src/content/films',
     type: 'multi',
@@ -494,7 +513,7 @@ function toast(msg, type = 'success') {
 function getIcon(name) {
   const icons = {
     camera: '\u{1F4F7}', newspaper: '\u{1F4F0}', shopping_bag: '\u{1F6CD}',
-    film: '\u{1F3AC}', person: '\u{1F464}', mail: '\u{2709}',
+    film: '\u{1F3AC}', person: '\u{1F464}', mail: '\u{2709}', edit_note: '\u{270D}',
   };
   return icons[name] || '\u{1F4C1}';
 }
@@ -1015,7 +1034,7 @@ async function saveItem(key, sha) {
       const id = data.id || data.title || 'untitled';
       await updateManifest(key, id, 'add');
     }
-    toast('\u4FDD\u5B58\u6210\u529F\uFF01\u7F51\u7AD9\u5C06\u57285\u5206\u949F\u5185\u81EA\u52A8\u66F4\u65B0');
+    toast('\u4FDD\u5B58\u6210\u529F\uFF01\u7F51\u7AD9\u5C06\u572830\u79D2\u5185\u81EA\u52A8\u66F4\u65B0');
     // Go back to list
     setTimeout(() => showCollection(key), 1500);
   } catch (err) {
@@ -1036,7 +1055,7 @@ async function deleteItem(key, path) {
       const contentId = path.split('/').pop().replace('.json', '');
       await updateManifest(key, contentId, 'remove');
     }
-    toast('\u5220\u9664\u6210\u529F\uFF01\u7F51\u7AD9\u5C06\u57285\u5206\u949F\u5185\u81EA\u52A8\u66F4\u65B0');
+    toast('\u5220\u9664\u6210\u529F\uFF01\u7F51\u7AD9\u5C06\u572830\u79D2\u5185\u81EA\u52A8\u66F4\u65B0');
     showCollection(key);
   } catch (err) {
     toast('\u5220\u9664\u5931\u8D25: ' + err.message, 'error');
